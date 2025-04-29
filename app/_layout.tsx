@@ -12,9 +12,9 @@ const IinitialLayout = () => {
     const isAuthGroup = segment[0] === "(auth)";
     if (session && !isAuthGroup) {
       if (session.user?.role === "officer") {
-        router.replace("/list");
+        router.replace("/officer/ODashBoard");
       } else if (session.user?.role === "clerk") {
-        router.replace("/");
+        router.replace("/clerk/CDashBoard");
       }
     } else if (!session && isAuthGroup) {
       router.replace("/");
