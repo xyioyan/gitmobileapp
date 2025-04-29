@@ -27,6 +27,19 @@ console.log('session',session)
             </TouchableOpacity>
           ),
         }}></Stack.Screen>
+        <Stack.Screen
+        name="WriteDescription"
+        redirect = {!session} // Redirect to login if not authenticated
+        options={{
+          headerTitle: 'Write Description',
+        }}></Stack.Screen>
+        <Stack.Screen
+        name="Camera"
+        redirect = {!session} // Redirect to login if not authenticated
+        options={{
+          headerTitle: 'Clerk Dashboard',
+          headerShown: false,
+        }}></Stack.Screen>
     </Stack>
   );
 };

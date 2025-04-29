@@ -11,7 +11,6 @@ import { StyleSheet } from "react-native";
 import Spinner from "react-native-loading-spinner-overlay";
 import { supabase } from "@/config/initSupabase";
 import { router, useRouter } from "expo-router";
-import { useAuth } from "@/provider/AuthProvider";
 
 const Login = () => {
   const [email, setEmail] = useState("21cs055@acetcbe.edu.in");
