@@ -81,7 +81,7 @@ const Login = () => {
               role === "clerk" && styles.selectedRadio,
             ]}
           />
-          <Text style={styles.radioText}>User</Text>
+          <Text style={styles.radioText}>Clerk</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -94,7 +94,7 @@ const Login = () => {
               role === "officer" && styles.selectedRadio,
             ]}
           />
-          <Text style={styles.radioText}>Admin</Text>
+          <Text style={styles.radioText}>Officer</Text>
         </TouchableOpacity>
       </View>
 

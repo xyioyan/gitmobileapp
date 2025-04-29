@@ -17,29 +17,15 @@ console.log('session',session)
         headerTintColor: '#fff',
       }}>
       <Stack.Screen
-        name="list"
+        name="ODashBoard"
         redirect = {!session} // Redirect to login if not authenticated
         options={{
-          headerTitle: 'My Files',
+          headerTitle: 'Officer Dashboard',
           headerRight: () => (
             <TouchableOpacity onPress={signOut}>
               <Ionicons name="log-out-outline" size={30} color={'#fff'} />
             </TouchableOpacity>
           ),
-        }}></Stack.Screen>
-        <Stack.Screen
-        name="officer"
-        redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'Officer Protected Files',
-          headerShown: false,
-        }}></Stack.Screen>
-        <Stack.Screen
-        name="clerk"
-        redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'clerk Protected Files',
-          headerShown: false,
         }}></Stack.Screen>
     </Stack>
   );

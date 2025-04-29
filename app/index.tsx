@@ -6,25 +6,26 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import Spinner from "react-native-loading-spinner-overlay";
 import { supabase } from "@/config/initSupabase";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
+import { useAuth } from "@/provider/AuthProvider";
 
 const Login = () => {
   const [email, setEmail] = useState("21cs055@acetcbe.edu.in");
   const [password, setPassword] = useState("123456");
   const [loading, setLoading] = useState(false);
-
   const onSignInPress = async () => {
     console.log("Sign in pressed");
     setLoading(true);
+  
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    
+  
     if (error) {
       console.log("Error signing in:", error.message);
       Alert.alert("Error signing in", error.message);
@@ -32,11 +33,26 @@ const Login = () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      console.log(user?.user_metadata.name); // -> Sathish  
-      Alert.alert("sign in Success");
+  
+      if (user) {
+        console.log(user.user_metadata.name); // Log user name
+  
+        // Check user role from user_metadata
+        const role = user.user_metadata.role;
+        console.log('User Role:', role);
+  
+        // Assuming your role is in the user_metadata, and you can use it here
+        if (role === 'officer') {
+          router.replace("/officer/ODashBoard" as never);
+        } else if (role === 'clerk') {
+          router.replace("/clerk/CDashBoard" as never);
+        }
+      }
     }
+  
     setLoading(false);
   };
+  
   const onSignUpPress =  () => {
     return router.replace("/signup" as never);
   };
@@ -102,3 +118,7 @@ const styles = StyleSheet.create({
 });
 
 export default Login;
+function useSegments() {
+  throw new Error("Function not implemented.");
+}
+
