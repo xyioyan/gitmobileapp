@@ -1,7 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  Button,
+  Modal,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import * as FileSystem from 'expo-file-system';
+import ImageViewing from 'react-native-image-viewing';
+import { Image } from 'expo-image';
+import { saveVisitLocally } from '@/storage/offlineQueue';
+import { syncVisitsIfOnline } from '@/services/syncVisits';
 
 export default function WriteDescription() {
   const {
@@ -15,46 +29,81 @@ export default function WriteDescription() {
     status,
   } = useLocalSearchParams();
 
-  const imageUri = typeof photoUri === 'string' ? decodeURIComponent(decodeURIComponent(photoUri)) : '';
-
+  const imageUri = typeof photoUri === 'string' ? decodeURIComponent(photoUri) : '';
+  const [newDescription, setNewDescription] = useState(description as string);
+  const [visible, setVisible] = useState(false);
+  const [imageExists, setImageExists] = useState(false);
 
   useEffect(() => {
-    const checkFileExistence = async (uri: string) => {
+    const checkFileExistence = async () => {
       try {
-        const fileInfo = await FileSystem.getInfoAsync(uri);
-        if (!fileInfo.exists) {
-          console.error('❌ File does not exist at:', uri);
+        const fileInfo = await FileSystem.getInfoAsync(imageUri);
+        if (fileInfo.exists) {
+          console.log('✅ File exists at:', imageUri);
+          setImageExists(true);
         } else {
-          console.log('✅ File exists at:', uri);
+          console.error('❌ File does not exist at:', imageUri);
         }
       } catch (err) {
         console.error('Error checking file existence:', err);
       }
     };
 
-    if (imageUri) {
-      checkFileExistence(imageUri);
-    }
+    if (imageUri) checkFileExistence();
   }, [imageUri]);
+  
+  const handleSave = async () => {
+    if (!imageUri || !userId || !timestamp || !latitude || !longitude) {
+      Alert.alert('Missing data', 'Cannot save without required fields.');
+      return;
+    }
+
+    try {
+      saveVisitLocally({
+        photoUri: imageUri,
+        description: newDescription,
+        latitude: parseFloat(latitude as string),
+        longitude: parseFloat(longitude as string),
+        userId: userId as string,
+        timestamp: timestamp as string,
+        address: (address as string) ?? 'Unknown',
+      });
+      Alert.alert('✅ Saved', 'Visit saved locally.');
+      await syncVisitsIfOnline();
+    } catch (err) {
+      console.error('Save failed:', err);
+      Alert.alert('❌ Error', 'Failed to save visit locally.');
+    }
+  };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.label}>Description:</Text>
       <Text style={styles.value}>{description}</Text>
 
-      {imageUri ? (
-        <Image
-          source={{ uri: imageUri }}
-          style={styles.preview}
-          resizeMode="contain"
-        />
+      {imageExists ? (
+        <>
+          <TouchableOpacity onPress={() => setVisible(true)}>
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.preview}
+              contentFit="contain"
+            />
+          </TouchableOpacity>
+          <Modal visible={visible} transparent={false}>
+            <ImageViewing
+              images={[{ uri: imageUri }]}
+              imageIndex={0}
+              onRequestClose={() => setVisible(false)} visible={false}            />
+          </Modal>
+        </>
       ) : (
         <Text style={styles.value}>No photo available</Text>
       )}
 
       <Text style={styles.label}>Latitude:</Text>
       <Text style={styles.value}>{latitude}</Text>
-
       <Text style={styles.label}>Longitude:</Text>
       <Text style={styles.value}>{longitude}</Text>
 
@@ -69,6 +118,16 @@ export default function WriteDescription() {
 
       <Text style={styles.label}>Status:</Text>
       <Text style={styles.value}>{status}</Text>
+
+      <Text style={styles.label}>New Description:</Text>
+      <TextInput
+        style={styles.input}
+        value={newDescription}
+        onChangeText={setNewDescription}
+        placeholder="Enter new description"
+        multiline
+      />
+      <Button title="💾 Save Visit Locally" onPress={handleSave} />
     </ScrollView>
   );
 }
@@ -81,8 +140,8 @@ const styles = StyleSheet.create({
   preview: {
     width: '100%',
     height: 300,
-    marginVertical: 15,
     borderRadius: 10,
+    marginVertical: 10,
   },
   label: {
     fontWeight: 'bold',
@@ -92,5 +151,13 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16,
     marginBottom: 5,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    fontSize: 16,
   },
 });

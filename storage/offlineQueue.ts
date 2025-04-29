@@ -18,7 +18,7 @@ export type Visit = {
 
 // ✅ Initialize the visits table
 export const initDb = () => {
-  // db.runSync(`DROP TABLE IF EXISTS visits;`);
+  db.runSync(`DROP TABLE IF EXISTS visits;`);
   db.runSync(`
     CREATE TABLE IF NOT EXISTS visits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

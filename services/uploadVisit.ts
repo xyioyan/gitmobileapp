@@ -19,6 +19,7 @@ export async function uploadVisit({
   address: string;
   userId: string;
 }) {
+  console.log('file at upload: ',photoUri)
   try {
     // Get base64 string of the image
     const base64 = await FileSystem.readAsStringAsync(photoUri, {
@@ -27,6 +28,7 @@ export async function uploadVisit({
 
     const fileName = `${userId}/${Date.now()}.jpg`; // or use uuid if preferred
     const contentType = 'image/jpeg';
+    console.log('file name after change: ',fileName)
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage

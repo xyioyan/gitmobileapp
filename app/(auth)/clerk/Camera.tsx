@@ -20,6 +20,8 @@ import * as Location from "expo-location";
 // import { supabase } from "../../services/supabaseClient";
 import { useAuth } from "@/provider/AuthProvider";
 import { router } from "expo-router";
+import * as FileSystem from "expo-file-system"; // ✅ CORRECT
+
 
 export default function CaptureVisitScreen() {
   const { session } = useAuth();
@@ -117,42 +119,48 @@ export default function CaptureVisitScreen() {
       Alert.alert("Error", "Could not take photo or get location.");
     }
   };
+const handleUsePhoto = async () => {
+  const userId = session?.user.id;
+  if (!photo || !coords || !timestamp || !userId) {
+    Alert.alert(
+      "Missing data",
+      "Photo, location, timestamp, or user ID missing."
+    );
+    return;
+  }
 
-  const handleUsePhoto = () => {
-    const userId = session?.user.id;
-    if (!photo || !coords || !timestamp || !userId) {
-      Alert.alert(
-        "Missing data",
-        "Photo, location, timestamp, or user ID missing."
-      );
-      return;
-    } else {
-      try {
-        console.log("Use Photo.");
-        router.push({
-          pathname: "/(auth)/clerk/WriteDescription",
-          params: {
-            photoUri: photo.uri,
-            description: "Field visit photo",
-            userId,
-            latitude: coords.latitude.toString(),
-            longitude: coords.longitude.toString(),
-            timestamp,
-            address: address ?? "unknown address",
-            status: "pending",
-          },
-        });
-        console.log(photo.uri)
-        setPhoto(null);
-        setCoords(null);
-        setAddress(null);
-      } catch (err) {
-        console.error("Local save failed", err);
-        Alert.alert("Error", "Failed to save visit locally.");
-      }
-    }
-  };
+  try {
+    // Persist the photo before navigating
+    const newPath = `${FileSystem.documentDirectory}${Date.now()}.jpg`;
+    await FileSystem.copyAsync({
+      from: photo.uri,
+      to: newPath,
+    });
 
+    console.log("✅ Saved photo to:", newPath);
+
+    router.push({
+      pathname: "/(auth)/clerk/WriteDescription",
+      params: {
+        photoUri: encodeURIComponent(newPath),
+        description: "Field visit photo",
+        userId,
+        latitude: coords.latitude.toString(),
+        longitude: coords.longitude.toString(),
+        timestamp,
+        address: address ?? "unknown address",
+        status: "pending",
+      },
+    });
+
+    setPhoto(null);
+    setCoords(null);
+    setAddress(null);
+  } catch (err) {
+    console.error("File copy failed", err);
+    Alert.alert("Error", "Failed to save photo.");
+  }
+};
   return (
     <SafeAreaView style={styles.container}>
       {photo ? (
