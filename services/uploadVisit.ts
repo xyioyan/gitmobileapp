@@ -44,6 +44,7 @@ export async function uploadVisit({
     const {
       data: { publicUrl },
     } = supabase.storage.from('photos').getPublicUrl(fileName);
+    console.log('public URL: ', publicUrl);
 
     // Save visit metadata
     const { error: insertError } = await supabase.from('visits').insert([

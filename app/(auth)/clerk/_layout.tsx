@@ -40,6 +40,13 @@ console.log('session',session)
           headerTitle: 'Clerk Dashboard',
           headerShown: false,
         }}></Stack.Screen>
+        <Stack.Screen
+        name="list"
+        redirect = {!session} // Redirect to login if not authenticated
+        options={{
+          headerTitle: 'History',
+          headerShown: false,
+        }}></Stack.Screen>
     </Stack>
   );
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   View,
   Text,
@@ -68,8 +68,9 @@ export default function WriteDescription() {
         timestamp: timestamp as string,
         address: (address as string) ?? 'Unknown',
       });
-      Alert.alert('✅ Saved', 'Visit saved locally.');
       await syncVisitsIfOnline();
+      Alert.alert('✅ Saved', 'Visit saved locally.');
+      router.replace('/clerk/CDashBoard' as never);
     } catch (err) {
       console.error('Save failed:', err);
       Alert.alert('❌ Error', 'Failed to save visit locally.');
@@ -127,7 +128,7 @@ export default function WriteDescription() {
         placeholder="Enter new description"
         multiline
       />
-      <Button title="💾 Save Visit Locally" onPress={handleSave} />
+      <Button title="💾 Save Visit" onPress={handleSave} />
     </ScrollView>
   );
 }

@@ -27,6 +27,17 @@ console.log('session',session)
             </TouchableOpacity>
           ),
         }}></Stack.Screen>
+        <Stack.Screen
+        name="MapView"
+        redirect = {!session} // Redirect to login if not authenticated
+        options={{
+          headerTitle: 'Officer Dashboard',
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut}>
+              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
+            </TouchableOpacity>
+          ),
+        }}></Stack.Screen>
     </Stack>
   );
 };

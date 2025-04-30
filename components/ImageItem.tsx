@@ -1,6 +1,6 @@
 import { FileObject } from '@supabase/storage-js';
 import { Image, View, Text, TouchableOpacity } from 'react-native';
-import { supabase } from '../config/initSupabase';
+import { supabase } from '@/config/initSupabase';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,7 +9,7 @@ const ImageItem = ({ item, userId, onRemoveImage }: { item: FileObject; userId: 
   const [image, setImage] = useState<string>('');
 
   supabase.storage
-    .from('files')
+    .from('photos')
     .download(`${userId}/${item.name}`)
     .then(({ data }) => {
       const fr = new FileReader();

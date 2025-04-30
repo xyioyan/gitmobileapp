@@ -8,7 +8,6 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/config/initSupabase';
 import { FileObject } from '@supabase/storage-js';
 import ImageItem from '@/components/ImageItem';
-import { router } from 'expo-router';
 
 const list = () => {
   const { user } = useAuth();
@@ -62,16 +61,10 @@ const list = () => {
         ))}
       </ScrollView>
 
-      {/* FAB: Upload image */}
-      <TouchableOpacity onPress={onSelectImage} style={[styles.fab, { left: 30 }]}>
+      {/* FAB to add images */}
+      <TouchableOpacity onPress={onSelectImage} style={styles.fab}>
         <Ionicons name="camera-outline" size={30} color={'#fff'} />
       </TouchableOpacity>
-
-      {/* FAB: Go to MapView */}
-      <TouchableOpacity onPress={() => router.push('/officer/MapView')} style={[styles.fab, { right: 30 }]}>
-        <Ionicons name="map" size={30} color={'#fff'} />
-      </TouchableOpacity>
-
     </View>
   );
 };
