@@ -1,0 +1,1 @@
+npm install && npm install --save-dev @babel/core @types/jest @types/react @types/react-navigation @types/react-test-renderer jest jest-expo react-test-renderer typescript
