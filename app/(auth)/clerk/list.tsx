@@ -1,70 +1,77 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Text} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/provider/AuthProvider';
-import * as FileSystem from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/config/initSupabase';
 import { FileObject } from '@supabase/storage-js';
-import ImageItem from '@/components/ImageItem';
+import { router } from 'expo-router';
+
+
+type Visit = {
+  id: number;
+  description: string;
+  image_url: string;
+  latitude: number;
+  longitude: number;
+  created_at: string;
+  picture_taken_at: string;
+  user_id: string;
+  status: string;
+  address: string;
+};
 
 const list = () => {
+  
   const { user } = useAuth();
-  const [files, setFiles] = useState<FileObject[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
 
   useEffect(() => {
     if (!user) return;
 
     // Load user images
-    loadImages();
+    fetchVisits();
   }, [user]);
 
-  const loadImages = async () => {
-    const { data } = await supabase.storage.from('photos').list(user!.id);
-    if (data) {
-      setFiles(data);
-    }
+  const fetchVisits = async () => {
+    const { data, error } = await supabase
+      .from('visits')
+      .select('*')
+      .eq('user_id', user!.id);
+
+    if (data) setVisits(data);
+    else console.error('Error fetching visits:', error);
   };
 
-  const onSelectImage = async () => {
-    const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ['images'], 
-      allowsEditing: true,
-    };
 
-    const result = await ImagePicker.launchImageLibraryAsync(options);
+  
 
-    // Save image if not cancelled
-    if (!result.canceled) {
-      const img = result.assets[0];
-      const base64 = await FileSystem.readAsStringAsync(img.uri, { encoding: 'base64' });
-      const filePath = `${user!.id}/${new Date().getTime()}.${img.type === 'image' ? 'jpg' : 'mp4'}`;
-      const contentType = img.type === 'image' ? 'image/jpg' : 'video/mp4';
-      await supabase.storage.from('photos').upload(filePath, decode(base64), { contentType });
-      loadImages();
-    }
-  };
+
+  
 
   const onRemoveImage = async (item: FileObject, listIndex: number) => {
     supabase.storage.from('photos').remove([`${user!.id}/${item.name}`]);
-    const newFiles = [...files];
-    newFiles.splice(listIndex, 1);
-    setFiles(newFiles);
+    fetchVisits();
   };
 
   return (
     <View style={styles.container}>
       <ScrollView>
-        {files.map((item, index) => (
-          <ImageItem key={item.id} item={item} userId={user!.id} onRemoveImage={() => onRemoveImage(item, index)} />
+      {visits.map((visit: Visit) => (
+          <TouchableOpacity
+            key={visit.id}
+            onPress={() =>
+              router.push({
+                pathname: '/(auth)/clerk/ImagePreview',
+                params: { ...visit, photoUri: encodeURIComponent(visit.image_url) },
+              })
+            }
+          >
+            {visit.image_url ? <Image style={{ width: 80, height: 80 }} source={{ uri: visit.image_url }} /> : <View style={{ width: 80, height: 80, backgroundColor: '#1A1A1A' }} />}
+            <Text style={{ flex: 1, color: '#fff' }}>{visit.description}</Text>
+            {/* Delete image button */}
+          </TouchableOpacity>
         ))}
-      </ScrollView>
-
-      {/* FAB to add images */}
-      <TouchableOpacity onPress={onSelectImage} style={styles.fab}>
-        <Ionicons name="camera-outline" size={30} color={'#fff'} />
-      </TouchableOpacity>
+        </ScrollView>
     </View>
   );
 };

@@ -33,6 +33,12 @@ console.log('session',session)
         options={{
           headerTitle: 'Write Description',
         }}></Stack.Screen>
+         <Stack.Screen
+        name="ImagePreview"
+        redirect = {!session} // Redirect to login if not authenticated
+        options={{
+          headerTitle: 'Preview Image',
+        }}></Stack.Screen>
         <Stack.Screen
         name="Camera"
         redirect = {!session} // Redirect to login if not authenticated

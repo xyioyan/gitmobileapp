@@ -12,7 +12,8 @@ import {
   Alert,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system';
-import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'react-native-image-viewing';
+// import ImageViewing from 'expo-image-viewing';
 import { Image } from 'expo-image';
 import { saveVisitLocally } from '@/storage/offlineQueue';
 import { syncVisitsIfOnline } from '@/services/syncVisits';
@@ -53,6 +54,8 @@ export default function WriteDescription() {
   }, [imageUri]);
   
   const handleSave = async () => {
+    console.log('Saving visit ....');
+    Alert.alert('Saving visit ....');
     if (!imageUri || !userId || !timestamp || !latitude || !longitude) {
       Alert.alert('Missing data', 'Cannot save without required fields.');
       return;
@@ -92,12 +95,7 @@ export default function WriteDescription() {
               contentFit="contain"
             />
           </TouchableOpacity>
-          <Modal visible={visible} transparent={false}>
-            <ImageViewing
-              images={[{ uri: imageUri }]}
-              imageIndex={0}
-              onRequestClose={() => setVisible(false)} visible={false}            />
-          </Modal>
+          
         </>
       ) : (
         <Text style={styles.value}>No photo available</Text>

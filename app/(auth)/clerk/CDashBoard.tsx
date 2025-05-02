@@ -10,10 +10,12 @@ import { FileObject } from '@supabase/storage-js';
 import ImageItem from '@/components/ImageItem';
 import { router } from 'expo-router';
 import { initDb } from '@/storage/offlineQueue';
+import ClerkTracker from './ClerkTracker';
 
 const list = () => {
   const { user } = useAuth();
   const [files, setFiles] = useState<FileObject[]>([]);
+  ClerkTracker(); // Start tracking clerk location
 
   useEffect(() => {
     if (!user) return;

@@ -68,7 +68,10 @@ const list = () => {
       </TouchableOpacity>
 
       {/* FAB: Go to MapView */}
-      <TouchableOpacity onPress={() => router.push('/officer/MapView')} style={[styles.fab, { right: 30 }]}>
+      <TouchableOpacity onPress={() => router.push('/officer/MapView copy')} style={[styles.fab, { right: 30 }]}>
+        <Ionicons name="map" size={30} color={'#fff'} />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push('/officer/OfficerRealtimeTracking')} style={[styles.fab, { right: 120 }]}>
         <Ionicons name="map" size={30} color={'#fff'} />
       </TouchableOpacity>
 

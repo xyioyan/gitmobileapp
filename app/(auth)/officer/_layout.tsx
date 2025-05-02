@@ -28,10 +28,21 @@ console.log('session',session)
           ),
         }}></Stack.Screen>
         <Stack.Screen
-        name="MapView"
+        name="OfficerRealtimeTracking"
         redirect = {!session} // Redirect to login if not authenticated
         options={{
-          headerTitle: 'Officer Dashboard',
+          headerTitle: 'Officer Dashboard tracking',
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut}>
+              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
+            </TouchableOpacity>
+          ),
+        }}></Stack.Screen>
+        <Stack.Screen
+        name="MapView copy"
+        redirect = {!session} // Redirect to login if not authenticated
+        options={{
+          headerTitle: 'Officer Dashboard dummy',
           headerRight: () => (
             <TouchableOpacity onPress={signOut}>
               <Ionicons name="log-out-outline" size={30} color={'#fff'} />
