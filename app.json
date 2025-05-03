@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sathiya25.AwesomeApp"
+      "package": "com.sathiya25.AwesomeApp",
+      "usesCleartextTraffic": true
     },
     "web": {
       "bundler": "metro",

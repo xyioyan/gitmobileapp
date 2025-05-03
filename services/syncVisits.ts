@@ -1,5 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
-import { getUnsyncedVisits, markVisitAsSynced } from '@/storage/offlineQueue';
+import { clearSyncedVisits, getUnsyncedVisits, markVisitAsSynced } from '@/storage/offlineQueue';
 import { uploadVisit } from '@/services/uploadVisit';
 
 type Visit = {
@@ -15,6 +15,7 @@ type Visit = {
 };
 
 export async function syncVisitsIfOnline() {
+  console.log('Checking network status...');
   const state = await NetInfo.fetch();
 
   if (!state.isConnected) {
@@ -42,4 +43,7 @@ export async function syncVisitsIfOnline() {
       console.warn(`Sync failed for visit ${visit.id}`, err);
     }
   }
+  console.log('Sync completed.');
+  // ✅ Clean up synced visits from local DB
+  clearSyncedVisits();
 }

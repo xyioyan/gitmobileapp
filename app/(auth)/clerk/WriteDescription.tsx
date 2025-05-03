@@ -16,7 +16,6 @@ import * as FileSystem from 'expo-file-system';
 // import ImageViewing from 'expo-image-viewing';
 import { Image } from 'expo-image';
 import { saveVisitLocally } from '@/storage/offlineQueue';
-import { syncVisitsIfOnline } from '@/services/syncVisits';
 
 export default function WriteDescription() {
   const {
@@ -62,6 +61,7 @@ export default function WriteDescription() {
     }
 
     try {
+      Alert.alert('Saving visit ....');
       saveVisitLocally({
         photoUri: imageUri,
         description: newDescription,
@@ -71,7 +71,6 @@ export default function WriteDescription() {
         timestamp: timestamp as string,
         address: (address as string) ?? 'Unknown',
       });
-      await syncVisitsIfOnline();
       Alert.alert('✅ Saved', 'Visit saved locally.');
       router.replace('/clerk/CDashBoard' as never);
     } catch (err) {
@@ -83,16 +82,15 @@ export default function WriteDescription() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.label}>Description:</Text>
-      <Text style={styles.value}>{description}</Text>
-
       {imageExists ? (
         <>
           <TouchableOpacity onPress={() => setVisible(true)}>
             <Image
               source={{ uri: imageUri }}
               style={styles.preview}
-              contentFit="contain"
+              contentFit="cover"
+              transition={1000}
+              placeholder="Loading..."
             />
           </TouchableOpacity>
           
@@ -139,9 +137,18 @@ const styles = StyleSheet.create({
   preview: {
     width: '100%',
     height: 300,
-    borderRadius: 10,
-    marginVertical: 10,
-  },
+    borderRadius: 16,
+    marginVertical: 12,
+    borderWidth: 0,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5, // for Android shadow
+    backgroundColor: '#fff',
+  }
+,  
   label: {
     fontWeight: 'bold',
     fontSize: 16,

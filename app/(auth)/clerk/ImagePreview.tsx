@@ -15,7 +15,7 @@ export default function VisitDetails() {
     user_id,
     latitude,
     longitude,
-    timestamp,
+    picture_taken_at,
     address,
   } = useLocalSearchParams();
 
@@ -39,7 +39,11 @@ export default function VisitDetails() {
       <Text style={styles.value}>{longitude}</Text>
 
       <Text style={styles.label}>Timestamp:</Text>
-      <Text style={styles.value}>{timestamp}</Text>
+      <Text style={styles.value}>
+        {picture_taken_at && typeof picture_taken_at === 'string'
+          ? new Date(picture_taken_at).toLocaleString()
+          : 'Invalid date'}
+      </Text>
 
       <Text style={styles.label}>Address:</Text>
       <Text style={styles.value}>{address}</Text>

@@ -18,7 +18,7 @@ export type Visit = {
 
 // ✅ Initialize the visits table
 export const initDb = () => {
-  db.runSync(`DROP TABLE IF EXISTS visits;`);
+  // db.runSync(`DROP TABLE IF EXISTS visits;`);
   db.runSync(`
     CREATE TABLE IF NOT EXISTS visits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,4 +63,10 @@ export const getUnsyncedVisits = (): Visit[] => {
 // ✅ Mark a visit as synced
 export const markVisitAsSynced = (id: number) => {
   db.runSync(`UPDATE visits SET synced = 1 WHERE id = ?;`, [id]);
+};
+
+// ✅ Clear all synced visits
+export const clearSyncedVisits = () => {
+  db.runSync(`DELETE FROM visits WHERE synced = 1;`);
+  console.log('Cleared synced visits from local DB');
 };
