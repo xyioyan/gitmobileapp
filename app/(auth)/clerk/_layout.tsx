@@ -17,7 +17,7 @@ console.log('session',session)
         headerTintColor: '#fff',
       }}>
       <Stack.Screen
-        name="CDashBoard"
+        name="CDashBoard" // Navigate to clerk dashboard page
         redirect = {!session} // Redirect to login if not authenticated
         options={{
           headerTitle: 'Clerk Dashboard',
@@ -28,30 +28,30 @@ console.log('session',session)
           ),
         }}></Stack.Screen>
         <Stack.Screen
-        name="WriteDescription"
+        name="WriteDescription" // Navigate to write description page
         redirect = {!session} // Redirect to login if not authenticated
         options={{
           headerTitle: 'Write Description',
         }}></Stack.Screen>
          <Stack.Screen
-        name="ImagePreview"
+        name="ImagePreview" // Navigate to image preview
         redirect = {!session} // Redirect to login if not authenticated
         options={{
           headerTitle: 'Preview Image',
         }}></Stack.Screen>
         <Stack.Screen
-        name="Camera"
+        name="Camera" // Navigate to camera
         redirect = {!session} // Redirect to login if not authenticated
         options={{
           headerTitle: 'Clerk Dashboard',
           headerShown: false,
         }}></Stack.Screen>
-        <Stack.Screen
-        name="list"
-        redirect = {!session} // Redirect to login if not authenticated
+        
+        <Stack.Screen // Navigate to visit history
+        name="VisitHistory"
+        //redirect = {!session} // Redirect to login if not authenticated
         options={{
           headerTitle: 'History',
-          headerShown: false,
         }}></Stack.Screen>
     </Stack>
   );

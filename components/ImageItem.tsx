@@ -20,7 +20,7 @@ const ImageItem = ({ item, userId, onRemoveImage }: { item: FileObject; userId: 
     });
 
   return (
-    <View style={{ flexDirection: 'row', margin: 1, alignItems: 'center', gap: 5 }}>
+    <View style={{ flexDirection: 'row', margin: 1, alignItems: 'center', gap: 5 ,backgroundColor: '#1A1A1A', padding: 10 ,marginBottom: 10, borderRadius: 10}}>
       {image ? <Image style={{ width: 80, height: 80 }} source={{ uri: image }} /> : <View style={{ width: 80, height: 80, backgroundColor: '#1A1A1A' }} />}
       <Text style={{ flex: 1, color: '#fff' }}>{item.name}</Text>
       {/* Delete image button */}
