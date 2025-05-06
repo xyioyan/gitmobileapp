@@ -140,7 +140,7 @@ const handleUsePhoto = async () => {
     console.log("✅ Saved photo to:", newPath);
 
     router.push({
-      pathname: "/(auth)/clerk/WriteDescription",
+      pathname: "/clerk/WriteDescription",
       params: {
         photoUri: encodeURIComponent(newPath),
         description: "Field visit photo",

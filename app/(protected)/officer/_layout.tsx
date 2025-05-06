@@ -17,10 +17,10 @@ console.log('session',session)
         headerTintColor: '#fff',
       }}>
       <Stack.Screen
-        name="CDashBoard" // Navigate to clerk dashboard page
+        name="ODashBoard"
         redirect = {!session} // Redirect to login if not authenticated
         options={{
-          headerTitle: 'Clerk Dashboard',
+          headerTitle: 'Officer Dashboard',
           headerRight: () => (
             <TouchableOpacity onPress={signOut}>
               <Ionicons name="log-out-outline" size={30} color={'#fff'} />
@@ -28,31 +28,39 @@ console.log('session',session)
           ),
         }}></Stack.Screen>
         <Stack.Screen
-        name="WriteDescription" // Navigate to write description page
+        name="OfficerRealtimeTracking"
         redirect = {!session} // Redirect to login if not authenticated
         options={{
-          headerTitle: 'Write Description',
-        }}></Stack.Screen>
-         <Stack.Screen
-        name="ImagePreview" // Navigate to image preview
-        redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'Preview Image',
+          headerTitle: 'Officer Dashboard tracking',
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut}>
+              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
+            </TouchableOpacity>
+          ),
         }}></Stack.Screen>
         <Stack.Screen
-        name="Camera" // Navigate to camera
+        name="MapView copy"
         redirect = {!session} // Redirect to login if not authenticated
         options={{
-          headerTitle: 'Clerk Dashboard',
-          headerShown: false,
+          headerTitle: 'Officer Dashboard dummy',
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut}>
+              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
+            </TouchableOpacity>
+          ),
+        }}></Stack.Screen>
+        <Stack.Screen
+        name="OfficerRealtimeTrackingWeb"
+        redirect = {!session} // Redirect to login if not authenticated
+        options={{
+          headerTitle: 'Officer Dashboard tracking',
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut}>
+              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
+            </TouchableOpacity>
+          ),
         }}></Stack.Screen>
         
-        <Stack.Screen // Navigate to visit history
-        name="VisitHistory"
-        //redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'History',
-        }}></Stack.Screen>
     </Stack>
   );
 };

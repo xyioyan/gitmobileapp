@@ -5,7 +5,6 @@ import { useAuth } from '@/provider/AuthProvider';
 import { supabase } from '@/config/initSupabase';
 import { FileObject } from '@supabase/storage-js';
 import { router } from 'expo-router';
-import { Timestamp } from 'react-native-reanimated/lib/typescript/commonTypes';
 
 
 type Visit = {
@@ -15,25 +14,22 @@ type Visit = {
   latitude: number;
   longitude: number;
   created_at: string;
-  picture_taken_at: Timestamp;
+  picture_taken_at: string;
   user_id: string;
   status: string;
   address: string;
 };
 
-const VisitHistory = () => {
+const list = () => {
   
-  const { user,session } = useAuth();
+  const { user } = useAuth();
   const [visits, setVisits] = useState<Visit[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    const loading = async () => {
+
     // Load user images
-   await fetchVisits();
-  console.log('Fetching visits...');
-  };
-    loading();
+    fetchVisits();
   }, [user]);
 
   const fetchVisits = async () => {
@@ -46,24 +42,15 @@ const VisitHistory = () => {
     else console.error('Error fetching visits:', error);
   };
 
+
+  
+
+
+  
+
   const onRemoveImage = async (item: FileObject, listIndex: number) => {
     supabase.storage.from('photos').remove([`${user!.id}/${item.name}`]);
-    const fileName = `${user!.id}/${item.name}`;
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('photos').getPublicUrl(fileName);
-    console.log('public URL: ', publicUrl);
-    const { data, error } = await supabase
-      .from('visits')
-      .delete()
-      .eq('image_url', publicUrl)
-      .eq('user_id', user!.id);
-
-    if (error) console.error('Error deleting image:', error);
-    else {
-      console.log('Image deleted successfully:', data);
-      fetchVisits(); // Refresh the list after deletion
-    }
+    fetchVisits();
   };
 
   return (
@@ -74,23 +61,13 @@ const VisitHistory = () => {
             key={visit.id}
             onPress={() =>
               router.push({
-                pathname: '/(auth)/clerk/ImagePreview',
+                pathname: '/clerk/ImagePreview',
                 params: { ...visit, photoUri: encodeURIComponent(visit.image_url) },
               })
             }
-            style={{padding: 10, marginBottom: 10, backgroundColor: '#fff', borderRadius: 10, flexDirection: 'row', }}
           >
-            {visit.image_url ? <Image style={{ width: 80, height: 80, borderRadius: 10}} source={{ uri: visit.image_url }} /> : <View style={{ width: 80, height: 80, backgroundColor: '#1A1A1A' }} />}
-            <View style={{ flex: 1, paddingLeft: 10 }}>
-              <Text style={{ flex: 1, color: '#1a1a1a', flexDirection: 'row' }}>
-                <Text style={{ fontWeight: 'bold' }}>Name:</Text>{session?.user.user_metadata.name}
-              </Text>
-              <Text style={{ flex: 1, color: '#1a1a1a' }}>{visit.description}</Text>
-              <Text style={{ flex: 1, color: '#1a1a1a',flexDirection: 'column' }}>
-              <Text style={{ flex: 1, color: '#1a1a1a', marginLeft: 10, fontWeight: 'bold'}}>{visit.latitude}  </Text>
-              <Text style={{ flex: 1, color: '#1a1a1a',fontWeight: 'bold' }}>{visit.longitude}</Text>
-                </Text>
-            </View>
+            {visit.image_url ? <Image style={{ width: 80, height: 80 }} source={{ uri: visit.image_url }} /> : <View style={{ width: 80, height: 80, backgroundColor: '#1A1A1A' }} />}
+            <Text style={{ flex: 1, color: '#fff' }}>{visit.description}</Text>
             {/* Delete image button */}
           </TouchableOpacity>
         ))}
@@ -119,4 +96,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VisitHistory;
+export default list;

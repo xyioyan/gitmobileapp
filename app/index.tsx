@@ -16,11 +16,17 @@ const Login = () => {
   const [email, setEmail] = useState("21cs041@acetcbe.edu.in");
   const [password, setPassword] = useState("123456");
   const [loading, setLoading] = useState(false);
+
   const onSignInPress = async () => {
     console.log("Sign in pressed");
     setLoading(true);
+    if (!email || !password) {
+      Alert.alert("Please enter your email and password");
+      setLoading(false);
+      return;
+    }
   
-    const { error } = await supabase.auth.signInWithPassword({
+    const {data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -29,16 +35,13 @@ const Login = () => {
       console.log("Error signing in:", error.message);
       Alert.alert("Error signing in", error.message);
     } else {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-  
+      const user = data.user;
       if (user) {
         console.log(user.user_metadata.name); // Log user name
   
         // Check user role from user_metadata
         const role = user.user_metadata.role;
-        console.log('User Role:', role);
+        console.log('User Roles:', role);
   
         // Assuming your role is in the user_metadata, and you can use it here
         if (role === 'officer') {
@@ -63,6 +66,8 @@ const Login = () => {
 
       <TextInput
         autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
         placeholder="john@doe.com"
         value={email}
         onChangeText={setEmail}
@@ -117,7 +122,4 @@ const styles = StyleSheet.create({
 });
 
 export default Login;
-function useSegments() {
-  throw new Error("Function not implemented.");
-}
 

@@ -26,7 +26,7 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 // Initialize the Supabase client
 export const supabase = createClient(url!, key!, {
   auth: {
-    storage: ExpoSecureStoreAdapter as any,
+    storage: undefined,
     detectSessionInUrl: false,
   },
 });

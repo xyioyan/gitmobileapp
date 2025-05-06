@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,6 +21,14 @@ const list = () => {
     loadImages();
   }, [user]);
 
+  const handleNavigation = () => {
+    if (Platform.OS === 'web') {
+      router.push('/officer/OfficerRealtimeTrackingWeb');
+    }
+    else {
+      router.push('/officer/OfficerRealtimeTracking');
+    }
+  };
   const loadImages = async () => {
     const { data } = await supabase.storage.from('photos').list(user!.id);
     if (data) {
@@ -71,9 +79,10 @@ const list = () => {
       <TouchableOpacity onPress={() => router.push('/officer/MapView')} style={[styles.fab, { right: 30 }]}>
         <Ionicons name="map" size={30} color={'#fff'} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push('/officer/OfficerRealtimeTracking')} style={[styles.fab, { right: 120 }]}>
+      <TouchableOpacity onPress={() => handleNavigation()} style={[styles.fab, { right: 120 }]}>
         <Ionicons name="map" size={30} color={'#fff'} />
       </TouchableOpacity>
+      
 
     </View>
   );

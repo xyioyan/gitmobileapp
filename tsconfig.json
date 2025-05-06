@@ -1,7 +1,10 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "module": "esnext", // or "es2020"
+    "target": "esnext",
     "strict": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"

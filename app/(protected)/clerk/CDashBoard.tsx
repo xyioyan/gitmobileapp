@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, GestureResponderEvent } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, GestureResponderEvent, Platform } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,9 +9,10 @@ import { supabase } from '@/config/initSupabase';
 import { FileObject } from '@supabase/storage-js';
 import ImageItem from '@/components/ImageItem';
 import { router } from 'expo-router';
-import { initDb } from '@/storage/offlineQueue';
-import ClerkTracker from './ClerkTracker';
-import { syncVisitsIfOnline } from '@/services/syncVisits';
+import ClerkTracker from '@/app/(protected)/clerk/ClerkTracker';
+// import { initDb } from '@/storage/offlineQueue';
+// import ClerkTracker from '@/clerk/ClerkTracker';
+// import { syncVisitsIfOnline } from '@/services/syncVisits';
 
 const List = () => {
   const { user } = useAuth();
@@ -19,7 +20,6 @@ const List = () => {
   
   useEffect(() => {
     if (!user) return;
-    initDb(); // Initialize the database
     loadImages(); // Load user images
   }, [user]);
 
@@ -40,8 +40,13 @@ const List = () => {
   };
   useEffect(() => {
     const initialize = async () => {
+      if (Platform.OS !== 'web') {
+      const {syncVisitsIfOnline} = await import('@/services/syncVisits');
+      const { initDb } = await import('@/storage/offlineQueue');
+      initDb(); // Initialize the database
       await syncVisitsIfOnline(); // Sync visits if online
       await loadImages();   // Then load images
+      }
     };
   
     initialize();
@@ -68,7 +73,7 @@ const List = () => {
   };
 
   function VisitHistory() {
-    router.push('/(auth)/clerk/VisitHistory' as never);
+    router.push('/clerk/VisitHistory' as never);
    
   }
 
