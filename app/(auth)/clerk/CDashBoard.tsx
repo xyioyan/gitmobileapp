@@ -9,7 +9,7 @@ import { supabase } from '@/config/initSupabase';
 import { FileObject } from '@supabase/storage-js';
 import ImageItem from '@/components/ImageItem';
 import { router } from 'expo-router';
-import ClerkTracker from '@/app/(protected)/clerk/ClerkTracker';
+import ClerkTracker from '@/app/(auth)/clerk/ClerkTracker';
 // import { initDb } from '@/storage/offlineQueue';
 // import ClerkTracker from '@/clerk/ClerkTracker';
 // import { syncVisitsIfOnline } from '@/services/syncVisits';

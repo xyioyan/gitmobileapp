@@ -7,7 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 // Simple stack layout within the authenticated area
 const StackLayout = () => {
   const { signOut,session } = useAuth();
-console.log('session',session)
+
+// console.log('session',session)
   return (
     <Stack
       screenOptions={{

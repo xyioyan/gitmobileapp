@@ -10,7 +10,7 @@ const IinitialLayout = () => {
 
   useEffect(() => {
     if (!initialized) return;
-    const isAuthGroup = segment[0] === "(protected)" as string;
+    const isAuthGroup = segment[0] === "(auth)";
     const role = session?.user?.user_metadata?.role; // ✅ Correct role access
     console.log("role", role);
     console.log("session", session);

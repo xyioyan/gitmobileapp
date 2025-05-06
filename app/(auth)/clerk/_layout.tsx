@@ -9,7 +9,7 @@ import TabBar from '@/components/TabBar'
 // Simple stack layout within the authenticated area
 const StackLayout = () => {
   const { signOut, session } = useAuth();
-  console.log("session", session);
+  // console.log("session", session);
   return (
     <><Stack
       screenOptions={{
@@ -63,31 +63,7 @@ const StackLayout = () => {
         }}
       ></Stack.Screen>
     </Stack>
-    <Tabs
-      tabBar={props => <TabBar {...props} />}
-    >
-        <Tabs.Screen
-          name="Camera"
-          options={{
-            title: "Camera",
-            headerShown: false,
-          }} />
-        <Tabs.Screen
-          name="CDashBoard"
-          options={{
-            title: "CDashBoard",
-          }} />
-        <Tabs.Screen
-          name="VisitHistory"
-          options={{
-            title: "Create"
-          }} />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: "Profile"
-          }} />
-      </Tabs></>
+</>
   );
 };
 

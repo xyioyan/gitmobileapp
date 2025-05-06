@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { icons } from '@/assets/icons';
+// import { icons } from '@/assets/icons';
 
 type TabBarButtonProps = {
   isFocused: boolean;
@@ -58,7 +58,7 @@ const TabBarButton: React.FC<TabBarButtonProps> = ({
       style={[styles.container, style]}
     >
       <Animated.View style={animatedIconStyle}>
-        {icons[routeName]({ color })}
+        {/* {icons[routeName]({ color })} */}
       </Animated.View>
 
       <Animated.Text
