@@ -1,14 +1,37 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
 import TabBarButton from './TabBarButton';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming ,withDelay} from 'react-native-reanimated';
+const HIDDEN_ROUTES = ['Camera','WriteDescription'];
 
-const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
+const TabBar = ({ state, descriptors, navigation }) => {
   const primaryColor = '#0891b2';
   const greyColor = '#737373';
 
+  // Collapsing logic
+  const collapsed = useSharedValue(0); // 0 = visible, 1 = collapsed
+
+  // useEffect(() => {
+  //   // Collapse the tab bar if not on the first tab (you can customize this logic)
+  //   collapsed.value = withDelay(
+  //     300, // delay in ms
+  //     withTiming(state.index ===0 ? 0 : 1, { duration: 300 })
+  //   );
+  // }, [state.index]);
+
+  const animatedTabBarStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: collapsed.value * 100 }],
+    opacity: 1 - collapsed.value,
+  }));
+
+  const currentRouteName = state.routes[state.index].name;
+
+  if (HIDDEN_ROUTES.includes(currentRouteName)) {
+    return null; // 🚫 Completely hide the tab bar
+  }
+
   return (
-    <View style={styles.tabbar}>
+    <Animated.View style={[styles.tabbar, animatedTabBarStyle]}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const label =
@@ -50,11 +73,11 @@ const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation })
             isFocused={isFocused}
             routeName={route.name}
             color={isFocused ? primaryColor : greyColor}
-            label={String(label)}
+            label={label}
           />
         );
       })}
-    </View>
+    </Animated.View>
   );
 };
 
@@ -69,15 +92,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     paddingVertical: 15,
     borderRadius: 25,
-    borderCurve: 'continuous', // iOS only
+    borderCurve: 'continuous',
     shadowColor: 'black',
     shadowOffset: { width: 0, height: 10 },
     shadowRadius: 10,
     shadowOpacity: 0.1,
-  },
-  tabbarItem: {
-    flex: 1,
-    alignItems: 'center',
   },
 });
 

@@ -61,7 +61,7 @@ const list = () => {
             key={visit.id}
             onPress={() =>
               router.push({
-                pathname: '/clerk/ImagePreview',
+                pathname: '/clerk/visits/PreviewImage',
                 params: { ...visit, photoUri: encodeURIComponent(visit.image_url) },
               })
             }

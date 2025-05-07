@@ -10,7 +10,7 @@ const ColorList: React.FC<ColorListProps> = ({ color }) => {
     <ScrollView contentContainerStyle={styles.container}>
       {[1, 0.8, 0.5].map((opacity) => (
         <View
-          key={opacity.toString()}
+          key={opacity}
           style={[styles.color, { backgroundColor: color, opacity }]}
         />
       ))}
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 150,
     borderRadius: 25,
-    borderCurve: 'continuous', // Note: This may not work on all platforms
+    borderCurve: 'continuous',
     marginBottom: 15,
   },
   container: {

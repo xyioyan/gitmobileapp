@@ -13,12 +13,12 @@ import { supabase } from "@/config/initSupabase";
 import { router, useRouter } from "expo-router";
 
 const Login = () => {
-  const [email, setEmail] = useState("21cs041@acetcbe.edu.in");
+  const [email, setEmail] = useState("21cs055@acetcbe.edu.in");
   const [password, setPassword] = useState("123456");
   const [loading, setLoading] = useState(false);
 
   const onSignInPress = async () => {
-    console.log("Sign in pressed");
+    // console.log("Sign in pressed");
     setLoading(true);
     if (!email || !password) {
       Alert.alert("Please enter your email and password");
@@ -32,16 +32,16 @@ const Login = () => {
     });
   
     if (error) {
-      console.log("Error signing in:", error.message);
+      // console.log("Error signing in:", error.message);
       Alert.alert("Error signing in", error.message);
     } else {
       const user = data.user;
       if (user) {
-        console.log(user.user_metadata.name); // Log user name
+        // console.log(user.user_metadata.name); // Log user name
   
         // Check user role from user_metadata
         const role = user.user_metadata.role;
-        console.log('User Roles:', role);
+        // console.log('User Roles:', role);
   
         // Assuming your role is in the user_metadata, and you can use it here
         if (role === 'officer') {

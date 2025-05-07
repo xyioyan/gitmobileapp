@@ -31,7 +31,7 @@ const OfficerLocationTrackingWeb = () => {
           locations[visit.id] = visit;
         });
         setClerkLocations(locations);
-        console.log('Fetched visits:', data);
+        // console.log('Fetched visits:', data);
       } else {
         console.error('Error fetching visits:', error);
       }
@@ -58,7 +58,7 @@ const OfficerLocationTrackingWeb = () => {
       // Get location
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
-      console.log("User location:", latitude, longitude);
+      // console.log("User location:", latitude, longitude);
       // Center the map on the user's location
     } catch (err) {
       console.error("Error getting location:", err);

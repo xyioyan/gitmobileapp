@@ -16,5 +16,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+, "assets/icons.js", "components/TabBar.jsx", "components/TabBarButton.jsx"  ]
 }

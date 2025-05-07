@@ -12,8 +12,10 @@ const Hello = () => {
 
   const fetchVisits = async () => {
     const { data, error } = await supabase.from('visits').select('*');
-    if (data) {setVisits(data);
-    console.log('Fetched visits:', data);}
+    if (data) {
+      setVisits(data);
+    // console.log('Fetched visits:', data);
+  }
     else console.error('Error fetching visits:', error);
   };
   return (

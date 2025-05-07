@@ -9,6 +9,7 @@ import {
   Button,
   Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 // import { isImageBlurry } from "../../services/imageBlurCheck";
 import {
   CameraView,
@@ -24,6 +25,7 @@ import * as FileSystem from "expo-file-system"; // ✅ CORRECT
 
 
 export default function CaptureVisitScreen() {
+  const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -34,7 +36,7 @@ export default function CaptureVisitScreen() {
     longitude: number;
   } | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [timestamp, setTimestamp] = useState<string | null>(null);
+  const [timestamp, setTimestamp] = useState<string >('');
 
   if (!permission) return <View style={styles.container} />;
   if (!permission.granted) {
@@ -75,7 +77,7 @@ export default function CaptureVisitScreen() {
         skipProcessing: true,
       });
 
-      console.log("📸 Captured Photo URI:", captured?.uri);
+      // console.log("📸 Captured Photo URI:", captured?.uri);
       if (!captured?.uri) {
         Alert.alert("Capture failed", "No URI returned from camera");
         return;
@@ -95,7 +97,7 @@ export default function CaptureVisitScreen() {
 
       const latitudeDMS = toDMS(location.coords.latitude, true);
       const longitudeDMS = toDMS(location.coords.longitude, false);
-      console.log("Formatted GeoTag:", `${latitudeDMS} ${longitudeDMS}`);
+      // console.log("Formatted GeoTag:", `${latitudeDMS} ${longitudeDMS}`);
 
       const addressResult = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
@@ -112,7 +114,8 @@ export default function CaptureVisitScreen() {
       }
 
       setAddress(fullAddress);
-      setTimestamp(new Date().toISOString());
+      setTimestamp(new Date().toLocaleString());
+      console.log("Photo captured:", timestamp);
       setPhoto(captured);
     } catch (err) {
       console.error("takePictureAsync error:", err);
@@ -137,10 +140,10 @@ const handleUsePhoto = async () => {
       to: newPath,
     });
 
-    console.log("✅ Saved photo to:", newPath);
+    // console.log("✅ Saved photo to:", newPath);
 
     router.push({
-      pathname: "/clerk/WriteDescription",
+      pathname: "/clerk/cdashboard/WriteDescription",
       params: {
         photoUri: encodeURIComponent(newPath),
         description: "Field visit photo",
@@ -162,12 +165,12 @@ const handleUsePhoto = async () => {
   }
 };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container,{paddingBottom: insets.bottom + 16}]}>
       {photo ? (
         <>
           <Image source={{ uri: photo.uri }} style={styles.preview} />
           {coords && (
-            <Text style={{ color: "#fff", textAlign: "center", marginTop: 10 }}>
+            <Text style={{ color: "#fff", textAlign: "center", margin: 10,bottom: 90 }}>
               Lat: {coords.latitude.toFixed(4)}, Lon:{" "}
               {coords.longitude.toFixed(4)}, Address: {address}, time:{" "}
               {timestamp}
@@ -229,9 +232,10 @@ const styles = StyleSheet.create({
   },
   flipButton: {
     alignSelf: "flex-end",
-    padding: 12,
+    padding: 20,
     borderRadius: 50,
     backgroundColor: "rgba(0,0,0,0.5)",
+    bottom: 40,
   },
   flipText: { color: "#fff" },
   captureButton: {
@@ -244,6 +248,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
     backgroundColor: "rgba(0,0,0,0.2)",
+    bottom: 40,
+
   },
   captureInner: {
     width: 54,
@@ -251,10 +257,10 @@ const styles = StyleSheet.create({
     borderRadius: 27,
     backgroundColor: "#fff",
   },
-  preview: { flex: 1, resizeMode: "contain" },
+  preview: { flex: 1, resizeMode: "contain"},
   buttonRow: {
     position: "absolute",
-    bottom: 40,
+    bottom: 110,
     left: 0,
     right: 0,
     flexDirection: "row",

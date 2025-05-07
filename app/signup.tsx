@@ -23,7 +23,7 @@ const Login = () => {
     return router.replace("/");
   };
   const onSignUpPress = async () => {
-    console.log("Sign up pressed");
+    // console.log("Sign up pressed");
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -33,7 +33,7 @@ const Login = () => {
       },
     });
     if (error) {
-      console.log("Error signing up:", error.message);
+      // console.log("Error signing up:", error.message);
       Alert.alert("Error signing up", error.message);
     } else {
       Alert.alert("sign up Success");

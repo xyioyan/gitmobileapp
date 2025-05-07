@@ -11,10 +11,12 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 
 import { Image } from "expo-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 // import { saveVisitLocally } from '@/storage/offlineQueue';
 
 export default function WriteDescription() {
@@ -28,6 +30,7 @@ export default function WriteDescription() {
     address,
     status,
   } = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
 
   const imageUri =
     typeof photoUri === "string" ? decodeURIComponent(photoUri) : "";
@@ -40,13 +43,13 @@ export default function WriteDescription() {
       try {
         const fileInfo = await FileSystem.getInfoAsync(imageUri);
         if (fileInfo.exists) {
-          console.log("✅ File exists at:", imageUri);
+          // console.log("✅ File exists at:", imageUri);
           setImageExists(true);
         } else {
-          console.error("❌ File does not exist at:", imageUri);
+          // console.error("❌ File does not exist at:", imageUri);
         }
       } catch (err) {
-        console.error("Error checking file existence:", err);
+        // console.error("Error checking file existence:", err);
       }
     };
 
@@ -54,7 +57,7 @@ export default function WriteDescription() {
   }, [imageUri]);
 
   const handleSave = async () => {
-    console.log("Saving visit ....");
+    // console.log("Saving visit ....");
     Alert.alert("Saving visit ....");
     if (!imageUri || !userId || !timestamp || !latitude || !longitude) {
       Alert.alert("Missing data", "Cannot save without required fields.");
@@ -62,7 +65,7 @@ export default function WriteDescription() {
     }
 
     try {
-      Alert.alert("Saving visit ....");
+      // Alert.alert("Saving visit ....");
       if (Platform.OS !== "web") {
         const { saveVisitLocally } = await import("@/storage/offlineQueue");
         saveVisitLocally({
@@ -77,56 +80,60 @@ export default function WriteDescription() {
         router.replace("/clerk/CDashBoard" as never);
       }
     } catch (err) {
-      console.error("Save failed:", err);
+      // console.error("Save failed:", err);
       Alert.alert("❌ Error", "Failed to save visit locally.");
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {imageExists ? (
-        <>
-          <TouchableOpacity onPress={() => setVisible(true)}>
-            <Image
-              source={{ uri: imageUri }}
-              style={styles.preview}
-              contentFit="cover"
-              transition={1000}
-              placeholder="Loading..."
-            />
-          </TouchableOpacity>
-        </>
-      ) : (
-        <Text style={styles.value}>No photo available</Text>
-      )}
-
-      <Text style={styles.label}>Latitude:</Text>
-      <Text style={styles.value}>{latitude}</Text>
-      <Text style={styles.label}>Longitude:</Text>
-      <Text style={styles.value}>{longitude}</Text>
-
-      <Text style={styles.label}>Timestamp:</Text>
-      <Text style={styles.value}>{timestamp}</Text>
-
-      <Text style={styles.label}>Address:</Text>
-      <Text style={styles.value}>{address}</Text>
-
-      <Text style={styles.label}>User ID:</Text>
-      <Text style={styles.value}>{userId}</Text>
-
-      <Text style={styles.label}>Status:</Text>
-      <Text style={styles.value}>{status}</Text>
-
-      <Text style={styles.label}>New Description:</Text>
-      <TextInput
-        style={styles.input}
-        value={newDescription}
-        onChangeText={setNewDescription}
-        placeholder="Enter new description"
-        multiline
-      />
-      <Button title="💾 Save Visit" onPress={handleSave} />
-    </ScrollView>
+    <KeyboardAvoidingView
+    behavior={Platform.OS === "ios" ? "padding" : "height"} // 'padding' works better for iOS
+    keyboardVerticalOffset={Platform.OS === "android" ? 80 : 0} // Adjust if needed
+    style={{ flex: 1 }}
+  >
+      <View style={{flex: 1,paddingBottom: insets.bottom + 16}}>
+        <ScrollView contentContainerStyle={[styles.container,{flexGrow:1}]}
+        keyboardShouldPersistTaps ="handled"
+        >
+          {imageExists ? (
+            <>
+              <TouchableOpacity onPress={() => setVisible(true)}>
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.preview}
+                  contentFit="cover"
+                  transition={1000}
+                  placeholder="Loading..."
+                />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <Text style={styles.value}>No photo available</Text>
+          )}
+          <Text style={styles.label}>Latitude:</Text>
+          <Text style={styles.value}>{latitude}</Text>
+          <Text style={styles.label}>Longitude:</Text>
+          <Text style={styles.value}>{longitude}</Text>
+          <Text style={styles.label}>Timestamp:</Text>
+          <Text style={styles.value}>{timestamp}</Text>
+          <Text style={styles.label}>Address:</Text>
+          <Text style={styles.value}>{address}</Text>
+          <Text style={styles.label}>User ID:</Text>
+          <Text style={styles.value}>{userId}</Text>
+          <Text style={styles.label}>Status:</Text>
+          <Text style={styles.value}>{status}</Text>
+          <Text style={styles.label}>New Description:</Text>
+          <TextInput
+            style={styles.input}
+            value={newDescription}
+            onChangeText={setNewDescription}
+            placeholder="Enter new description"
+            multiline
+          />
+          <Button title="💾 Save Visit" onPress={handleSave} />
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -134,6 +141,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: "#fff",
+    // bottom: 30,
   },
   preview: {
     width: "100%",

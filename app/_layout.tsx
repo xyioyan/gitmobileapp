@@ -12,13 +12,12 @@ const IinitialLayout = () => {
     if (!initialized) return;
     const isAuthGroup = segment[0] === "(auth)";
     const role = session?.user?.user_metadata?.role; // ✅ Correct role access
-    console.log("role", role);
-    console.log("session", session);
+    
     if (session && !isAuthGroup) {
       if (role === "officer") {
         router.replace("/officer/ODashBoard");
       } else if (role === "clerk") {
-        router.replace("/clerk/CDashBoard");
+        router.replace("/clerk/cdashboard" as never);
       }
     } else if (!session && isAuthGroup) {
       router.replace("/");
@@ -32,15 +31,18 @@ const IinitialLayout = () => {
 
   return (
     <>
+
       <Slot />
     </>
   );
 };
 const RootLayout = () => {
   return (
+   
     <AuthProvider>
       <IinitialLayout />
     </AuthProvider>
+   
   );
 };
 export default RootLayout;

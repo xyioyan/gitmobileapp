@@ -1,70 +1,30 @@
-import { Stack } from "expo-router";
-import { useAuth } from "@/provider/AuthProvider";
-import React from "react";
+// app/(tabs)/_layout.tsx
+import { Tabs } from "expo-router";
+import TabBar from "@/components/TabBar";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from 'expo-router'
-import TabBar from '@/components/TabBar'
+import { useAuth } from "@/provider/AuthProvider";
 
-// Simple stack layout within the authenticated area
-const StackLayout = () => {
-  const { signOut, session } = useAuth();
-  // console.log("session", session);
+export default function Layout() {
+  const { signOut } = useAuth();
   return (
-    <><Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: "#0f0f0f",
-        },
-        headerTintColor: "#fff",
-      }}
-    >
-      <Stack.Screen
-        name="CDashBoard" // Navigate to clerk dashboard page
-        redirect={!session} // Redirect to login if not authenticated
+    <Tabs tabBar={(props) => <TabBar {...props} />}>
+      <Tabs.Screen
+        name="cdashboard"
         options={{
-          headerTitle: "Clerk Dashboard",
+          title: "Home",
           headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={"#fff"} />
+            <TouchableOpacity onPress={signOut} style={{margin:5}}>
+              <Ionicons name="log-out-outline" size={30} color={"#000"} />
             </TouchableOpacity>
-          ),
+          ),tabBarHideOnKeyboard:true
         }}
-      ></Stack.Screen>
-      <Stack.Screen
-        name="WriteDescription" // Navigate to write description page
-        redirect={!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: "Write Description",
-        }}
-      ></Stack.Screen>
-      <Stack.Screen
-        name="ImagePreview" // Navigate to image preview
-        redirect={!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: "Preview Image",
-        }}
-      ></Stack.Screen>
-      <Stack.Screen
-        name="Camera" // Navigate to camera
-        redirect={!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: "Clerk Dashboard",
-          headerShown: false,
-        }}
-      ></Stack.Screen>
+      />
+      <Tabs.Screen name="visits" options={{ title: "Visit History" ,tabBarHideOnKeyboard:true}} />
+      <Tabs.Screen name="list" options={{ title: "List" ,tabBarHideOnKeyboard:true}} />
+      <Tabs.Screen name="profile" options={{ title: "Profile",tabBarHideOnKeyboard:true }} />
 
-      <Stack.Screen // Navigate to visit history
-
-        name="VisitHistory"
-        redirect={!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: "History",
-        }}
-      ></Stack.Screen>
-    </Stack>
-</>
+      {/* Hide tab bar for Camera screen */}
+    </Tabs>
   );
-};
-
-export default StackLayout;
+}
