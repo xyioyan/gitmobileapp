@@ -7,6 +7,7 @@ const IinitialLayout = () => {
   const { session, initialized } = useAuth();
   const segment = useSegments();
   const router = useRouter();
+  console.log("session", session);
 
   useEffect(() => {
     if (!initialized) return;

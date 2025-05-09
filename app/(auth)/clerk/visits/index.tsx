@@ -1,12 +1,22 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Text} from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/provider/AuthProvider';
-import { supabase } from '@/config/initSupabase';
-import { FileObject } from '@supabase/storage-js';
-import { router } from 'expo-router';
-import { Timestamp } from 'react-native-reanimated/lib/typescript/commonTypes';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Text,
+  SafeAreaView,
+  ActivityIndicator,
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@/provider/AuthProvider";
+import { supabase } from "@/config/initSupabase";
+import { FileObject } from "@supabase/storage-js";
+import { router } from "expo-router";
+import { Timestamp } from "react-native-reanimated/lib/typescript/commonTypes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { COLORS, SPACING, TYPOGRAPHY, SHADOWS, COMPONENTS } from '@/src/constants/theme';
 
 type Visit = {
   id: number;
@@ -15,110 +25,254 @@ type Visit = {
   latitude: number;
   longitude: number;
   created_at: string;
-  picture_taken_at: Timestamp;
+  picture_taken_at: string;
   user_id: string;
   status: string;
   address: string;
 };
 
 const VisitHistory = () => {
-  const insets  = useSafeAreaInsets();
-  
-  const { user,session } = useAuth();
+  const insets = useSafeAreaInsets();
+  const { user, session } = useAuth();
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
-    const loading = async () => {
-    // Load user images
-   await fetchVisits();
-  console.log('Fetching visits...');
-  };
-    loading();
+    const loadData = async () => {
+      setLoading(true);
+      await fetchVisits();
+      setLoading(false);
+    };
+    loadData();
   }, [user]);
 
   const fetchVisits = async () => {
     const { data, error } = await supabase
-      .from('visits')
-      .select('*')
-      .eq('user_id', user!.id);
+      .from("visits")
+      .select("*")
+      .eq("user_id", user!.id)
+      .order('created_at', { ascending: false });
 
     if (data) setVisits(data);
-    else console.error('Error fetching visits:', error);
+    if (error) console.error("Error fetching visits:", error);
   };
 
   const onRemoveImage = async (item: FileObject, listIndex: number) => {
-    supabase.storage.from('photos').remove([`${user!.id}/${item.name}`]);
+    supabase.storage.from("photos").remove([`${user!.id}/${item.name}`]);
     const fileName = `${user!.id}/${item.name}`;
     const {
       data: { publicUrl },
-    } = supabase.storage.from('photos').getPublicUrl(fileName);
-    // console.log('public URL: ', publicUrl);
-    const { data, error } = await supabase
-      .from('visits')
+    } = supabase.storage.from("photos").getPublicUrl(fileName);
+    
+    const { error } = await supabase
+      .from("visits")
       .delete()
-      .eq('image_url', publicUrl)
-      .eq('user_id', user!.id);
+      .eq("image_url", publicUrl)
+      .eq("user_id", user!.id);
 
-    if (error) console.error('Error deleting image:', error);
-    else {
-      // console.log('Image deleted successfully:', data);
-      fetchVisits(); // Refresh the list after deletion
-    }
+    if (error) console.error("Error deleting image:", error);
+    else fetchVisits();
   };
 
+  const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.container,{paddingBottom: insets.bottom}]}>
-      <ScrollView>
-      <View style={{paddingBottom: insets.bottom + 16}} >
-        {visits.map((visit: Visit) => (
+    <SafeAreaView style={[styles.safeArea,{ paddingBottom: insets.bottom + SPACING.xlarge+ SPACING.large}]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          { paddingBottom: insets.bottom + SPACING.xlarge },
+        ]}
+      >
+        {visits.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="images-outline" size={48} color={COLORS.gray500} />
+            <Text style={[TYPOGRAPHY.heading3, styles.emptyText]}>
+              No visits recorded yet
+            </Text>
+          </View>
+        ) : (
+          visits.map((visit) => (
             <TouchableOpacity
               key={visit.id}
               onPress={() =>
                 router.push({
-                  pathname: '/clerk/visits/PreviewImage',
-                  params: { ...visit, photoUri: encodeURIComponent(visit.image_url) },
+                  pathname: "/clerk/visits/PreviewImage",
+                  params: {
+                    ...visit,
+                    photoUri: encodeURIComponent(visit.image_url),
+                  },
                 })
               }
-              style={{padding: 10, marginBottom: 10, backgroundColor: '#fff', borderRadius: 10, flexDirection: 'row', }}
+              style={[COMPONENTS.card, styles.visitCard]}
             >
-              {visit.image_url ? <Image style={{ width: 80, height: 80, borderRadius: 10}} source={{ uri: visit.image_url }} /> : <View style={{ width: 80, height: 80, backgroundColor: '#1A1A1A' }} />}
-              <View style={{ flex: 1, paddingLeft: 10 }}>
-                <Text style={{ flex: 1, color: '#1a1a1a', flexDirection: 'row' }}>
-                  <Text style={{ fontWeight: 'bold' }}>Name:</Text>{session?.user.user_metadata.name}
-                </Text>
-                <Text style={{ flex: 1, color: '#1a1a1a' }}>{visit.description}</Text>
-                <Text style={{ flex: 1, color: '#1a1a1a',flexDirection: 'column' }}>
-                <Text style={{ flex: 1, color: '#1a1a1a', marginLeft: 10, fontWeight: 'bold'}}>{visit.latitude}  </Text>
-                <Text style={{ flex: 1, color: '#1a1a1a',fontWeight: 'bold' }}>{visit.longitude}</Text>
+              {visit.image_url ? (
+                <Image
+                  style={styles.visitImage}
+                  source={{ uri: visit.image_url }}
+                />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <Ionicons name="image-outline" size={32} color={COLORS.gray200} />
+                </View>
+              )}
+              
+              <View style={styles.visitDetails}>
+                <Text style={TYPOGRAPHY.body} numberOfLines={1}>
+                  <Text style={styles.label}>Status: </Text>
+                  <Text style={[
+                    styles.statusText,
+                    visit.status === 'completed' ? styles.completed : styles.pending
+                  ]}>
+                    {visit.status}
                   </Text>
+                </Text>
+                
+                {visit.description && (
+                  <Text style={[TYPOGRAPHY.body, styles.description]} numberOfLines={2}>
+                    {visit.description}
+                  </Text>
+                )}
+                
+                <Text style={[TYPOGRAPHY.caption, styles.dateText]}>
+                  {formatDate(visit.picture_taken_at)}
+                </Text>
+                
+                {visit.address ? (
+                  <Text style={[TYPOGRAPHY.caption, styles.address]} numberOfLines={1}>
+                    <Ionicons name="location-outline" size={14} color={COLORS.gray500} />
+                    {visit.address}
+                  </Text>
+                ) : (
+                  <Text style={[TYPOGRAPHY.caption, styles.coordinates]}>
+                    {visit.latitude.toFixed(4)}, {visit.longitude.toFixed(4)}
+                  </Text>
+                )}
               </View>
-              {/* Delete image button */}
             </TouchableOpacity>
-          ))}
-      </View>
-        </ScrollView>
-    </View>
+          ))
+        )}
+      </ScrollView>
+
+      <TouchableOpacity
+        onPress={() => fetchVisits()}
+        style={[styles.fab, { bottom: insets.bottom + SPACING.xlarge + SPACING.large + SPACING.medium }]}
+      >
+        <Ionicons name="reload-outline" size={24} color={COLORS.white} />
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#151515',
+    backgroundColor: COLORS.backgroundLight,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.backgroundLight,
+  },
+  scrollContainer: {
+    padding: SPACING.medium,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.xlarge,
+  },
+  emptyText: {
+    marginTop: SPACING.medium,
+    color: COLORS.gray500,
+    textAlign: 'center',
+  },
+  visitCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.medium,
+    padding: SPACING.medium,
+  },
+  visitImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: COLORS.gray100,
+  },
+  imagePlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: COLORS.gray100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  visitDetails: {
+    flex: 1,
+    paddingLeft: SPACING.medium,
+  },
+  label: {
+    fontWeight: '600',
+    color: COLORS.gray800,
+  },
+  statusText: {
+    textTransform: 'capitalize',
+  },
+  completed: {
+    color: COLORS.success,
+  },
+  pending: {
+    color: COLORS.warning,
+  },
+  description: {
+    marginTop: SPACING.small,
+    color: COLORS.gray800,
+  },
+  dateText: {
+    marginTop: SPACING.tiny,
+    color: COLORS.gray500,
+  },
+  address: {
+    marginTop: SPACING.small,
+    color: COLORS.gray500,
+  },
+  coordinates: {
+    marginTop: SPACING.small,
+    color: COLORS.gray500,
+    fontFamily: 'monospace',
   },
   fab: {
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 70,
     position: 'absolute',
-    bottom: 40,
-    right: 30,
-    height: 70,
-    backgroundColor: '#2b825b',
-    borderRadius: 100,
+    right: SPACING.large,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.medium,
   },
 });
 

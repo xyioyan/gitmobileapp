@@ -17,12 +17,13 @@ export default function Layout() {
             <TouchableOpacity onPress={signOut} style={{margin:5}}>
               <Ionicons name="log-out-outline" size={30} color={"#000"} />
             </TouchableOpacity>
-          ),tabBarHideOnKeyboard:true
+          )
+         ,headerShown:false
         }}
       />
-      <Tabs.Screen name="visits" options={{ title: "Visit History" ,tabBarHideOnKeyboard:true}} />
-      <Tabs.Screen name="list" options={{ title: "List" ,tabBarHideOnKeyboard:true}} />
-      <Tabs.Screen name="profile" options={{ title: "Profile",tabBarHideOnKeyboard:true }} />
+      <Tabs.Screen name="visits" options={{ title: "Visit History" ,tabBarHideOnKeyboard:true,headerShown:false}} />
+      <Tabs.Screen name="list" options={{ title: "List" ,tabBarHideOnKeyboard:true,headerShown:false}} />
+      <Tabs.Screen name="profile" options={{ title: "Profile",tabBarHideOnKeyboard:true,headerShown:false }} />
 
       {/* Hide tab bar for Camera screen */}
     </Tabs>

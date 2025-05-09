@@ -20,27 +20,79 @@ const OfficerLocationTrackingWeb = () => {
   const [selectedClerk, setSelectedClerk] = useState<Visit | null>(null);
   const insets = useSafeAreaInsets();
 
-  // Fetch visits data from Supabase
-  useEffect(() => {
-    const fetchVisits = async () => {
-      const { data, error } = await supabase.from('visits').select('*');
-      if (data) {
-        // Map the data into the structure we need (clerkId -> visit details)
-        const locations: Record<string, Visit> = {};
-        data.forEach((visit: Visit) => {
-          locations[visit.id] = visit;
-        });
-        setClerkLocations(locations);
-        // console.log('Fetched visits:', data);
-      } else {
-        console.error('Error fetching visits:', error);
-      }
-    };
-
-    fetchVisits();
-  }, []);
+  const fetchVisitsForOfficer = async () => {
+    const { data: userResponse, error: userFetchError } = await supabase.auth.getUser();
+  
+    if (userFetchError || !userResponse?.user) {
+      console.error("Error fetching current user:", userFetchError);
+      return;
+    }
+  
+    const officerId = userResponse.user.id;
+  
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("clerks")
+      .eq("id", officerId)
+      .single();
+  
+    if (userError || !userData) {
+      console.error("Error fetching officer clerks list:", userError);
+      return;
+    }
+  
+    const clerkIds = userData.clerks;
+  
+    if (!clerkIds || clerkIds.length === 0) {
+      console.log("No clerks assigned to this officer.");
+      setClerkLocations({});
+      return;
+    }
+  
+    // Step 1: Fetch visits
+    const { data: visits, error: visitsError } = await supabase
+      .from("visits")
+      .select("*")
+      .in("user_id", clerkIds);
+  
+    if (visitsError) {
+      console.error("Error fetching visits:", visitsError);
+      return;
+    }
+  
+    // Step 2: Fetch clerk names
+    const { data: clerkUsers, error: clerkFetchError } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", clerkIds);
+  
+    if (clerkFetchError) {
+      console.error("Error fetching clerk user info:", clerkFetchError);
+      return;
+    }
+  
+    const clerkNameMap = clerkUsers.reduce((acc, clerk) => {
+      acc[clerk.id] = clerk.name;
+      return acc;
+    }, {} as Record<string, string>);
+  
+    // Step 3: Merge clerk name into visits
+    const locations: Record<string, Visit> = {};
+    visits.forEach((visit: Visit & { user_id: string }) => {
+      locations[visit.id] = {
+        ...visit,
+        name: clerkNameMap[visit.user_id] || "Unknown Clerk",
+      };
+    });
+  
+    setClerkLocations(locations);
+  };
+  
+  
+  useEffect(() => {fetchVisitsForOfficer();}, []);
 
   const centerOnUserLocation = async () => {
+    fetchVisitsForOfficer();
     console.log("Centering on user location...");
     try {
       const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();

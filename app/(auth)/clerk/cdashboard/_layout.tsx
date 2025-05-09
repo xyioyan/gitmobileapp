@@ -44,6 +44,7 @@ const StackLayout = () => {
               redirect={!session} // Redirect to login if not authenticated
               options={{
                 headerTitle: "Write Description",
+                headerShown: false
                 
               }}
             ></Stack.Screen>

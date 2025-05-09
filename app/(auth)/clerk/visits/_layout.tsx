@@ -3,50 +3,61 @@ import { useAuth } from "@/provider/AuthProvider";
 import React from "react";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import TabBar from "@/components/TabBar";
+import { COLORS, TYPOGRAPHY } from '@/src/constants/theme';
 
-// Simple stack layout within the authenticated area
 const StackLayout = () => {
   const { signOut, session } = useAuth();
-  // console.log("session", session);
+
   return (
-    <>
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: "#0f0f0f",
-          },
-          headerTintColor: "#fff",
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: COLORS.primary,
+        },
+        headerTintColor: COLORS.white,
+        headerTitleStyle: {
+          ...TYPOGRAPHY.heading3,
+          color: COLORS.white,
+        },
+        headerBackVisible: false, // Updated property
+        headerShadowVisible: false,
+      }}
+    >
+      <Stack.Screen
+        name="index"
+        redirect={!session}
+        options={{
+          headerTitle: "Visit History",
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut} style={{ marginRight: 16 }}>
+              <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+          ),
         }}
-      >
-        <Stack.Screen // Navigate to visit history
-          name="index"
-          redirect={!session} // Redirect to login if not authenticated
-          options={{
-            headerTitle: "History",
-            headerShown: false,
-          }}
-        ></Stack.Screen>
-        <Stack.Screen
-          name="PreviewImage" // Navigate to image preview
-          redirect={!session} // Redirect to login if not authenticated
-          options={{
-            headerTitle: "Preview Image",
-            headerShown: false,
-          }}
-        ></Stack.Screen>
-        
-        <Stack.Screen 
-          name="UploadBacklog" // Navigate to Un synced Images
-          redirect={!session} // Redirect to login if not authenticated
-          options={{
-            headerTitle: "History",
-            headerShown: false,
-          }}
-        ></Stack.Screen>
-      </Stack>
-    </>
+      />
+      
+      <Stack.Screen
+        name="PreviewImage"
+        redirect={!session}
+        options={{
+          headerTitle: "Visit Details",
+          headerBackTitle: "Back",
+        }}
+      />
+
+      <Stack.Screen
+        name="UploadBacklog"
+        redirect={!session}
+        options={{
+          headerTitle: "Pending Uploads",
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut} style={{ marginRight: 16 }}>
+              <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+    </Stack>
   );
 };
 
