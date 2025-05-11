@@ -10,6 +10,7 @@ export const COLORS = {
   success: '#10b981',
   warning: '#f59e0b',
   error: '#ef4444',
+  approved: '#3b82f6',
   
   // Neutrals
   white: '#ffffff',

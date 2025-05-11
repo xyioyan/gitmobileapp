@@ -1,79 +1,111 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native'
-import React, { useEffect } from 'react'
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React from 'react';
 import { icons } from '../assets/icons';
-import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { 
+  interpolate, 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withSpring 
+} from 'react-native-reanimated';
+import { COLORS, TYPOGRAPHY, SPACING } from '@/src/constants/theme';
 
 const TabBarButton = (props) => {
-    const {isFocused, label, routeName, color} = props;
+  const { isFocused, label, routeName, onPress, onLongPress, showLabel } = props;
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(1);
 
-    const scale = useSharedValue(0);
+  React.useEffect(() => {
+    scale.value = withSpring(isFocused ? 1 : 0, {
+      damping: 10,
+      stiffness: 150
+    });
+    opacity.value = withSpring(isFocused ? 1 : 0.7, { duration: 200 });
+  }, [isFocused]);
 
-    useEffect(()=>{
-        scale.value = withSpring(
-            typeof isFocused === 'boolean'? (isFocused? 1: 0): isFocused,
-            {duration: 350}
-        );
-    },[scale, isFocused]);
+  const animatedIconStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: interpolate(scale.value, [0, 1], [1, 1.1]) }],
+      opacity: opacity.value
+    };
+  });
 
-    const animatedIconStyle = useAnimatedStyle(()=>{
+  const animatedTextStyle = useAnimatedStyle(() => {
+    return {
+      opacity: showLabel && isFocused ? 1 : 0,
+      transform: [{
+        translateY: interpolate(
+          scale.value,
+          [0, 1],
+          [5, 0]
+        )
+      }]
+    };
+  });
 
-        const scaleValue = interpolate(
-            scale.value,
-            [0, 1],
-            [1, 1.4]
-        );
-        const top = interpolate(
-            scale.value,
-            [0, 1],
-            [0, 8]
-        );
-
-        return {
-            // styles
-            transform: [{scale: scaleValue}],
-            top
-        }
-    })
-    const animatedTextStyle = useAnimatedStyle(()=>{
-
-        const opacity = interpolate(
-            scale.value,
-            [0, 1],
-            [1, 0]
-        );
-
-        return {
-            // styles
-            opacity
-        }
-    })
   return (
-    <Pressable {...props} style={styles.container}>
-        <Animated.View style={[animatedIconStyle]}>
-            {
-                icons[routeName]({
-                    color
-                })
-            }
+    <Pressable 
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={styles.container}
+      android_ripple={{
+        color: COLORS.primaryLight,
+        borderless: true,
+        radius: 28
+      }}
+    >
+      <View style={styles.buttonContent}>
+        <Animated.View style={[styles.iconContainer, animatedIconStyle]}>
+          {icons[routeName]({
+            color: isFocused ? COLORS.primary : COLORS.gray500,
+            size: 26
+          })}
         </Animated.View>
-        
-        <Animated.Text style={[{ 
-            color,
-            fontSize: 11
-        }, animatedTextStyle]}>
+
+        {showLabel && (
+          <Animated.Text style={[
+            TYPOGRAPHY.caption,
+            styles.label,
+            { color: isFocused ? COLORS.primary : 'transparent' },
+            animatedTextStyle
+          ]}>
             {label}
-        </Animated.Text>
+          </Animated.Text>
+        )}
+      </View>
+
+      {isFocused && <View style={styles.activeBar} />}
     </Pressable>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 4
-    }
-})
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.small,
+    position: 'relative',
+  },
+  buttonContent: {
+    alignItems: 'center',
+    gap: SPACING.tiny,
+  },
+  iconContainer: {
+    marginBottom: 2,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  activeBar: {
+    position: 'absolute',
+    bottom: 0,
+    height: 3,
+    width: '40%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
+  },
+});
 
-export default TabBarButton
+export default TabBarButton;

@@ -1,13 +1,16 @@
 import { AuthProvider, useAuth } from "@/provider/AuthProvider";
+import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import { Slot, useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
-import { ActivityIndicator } from "react-native";
+import React, { useEffect } from "react";
+import { ActivityIndicator, StatusBar } from "react-native";
 
 const IinitialLayout = () => {
   const { session, initialized } = useAuth();
   const segment = useSegments();
   const router = useRouter();
-  console.log("session", session);
+  const testAvatar = require("@/assets/images/avatar.jpg");
+  // console.log('image',testAvatar)
+  // console.log("session", session);
 
   useEffect(() => {
     if (!initialized) return;
@@ -32,8 +35,10 @@ const IinitialLayout = () => {
 
   return (
     <>
+     <ActionSheetProvider>
 
       <Slot />
+      </ActionSheetProvider>
     </>
   );
 };

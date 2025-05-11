@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
+import { SPACING } from "@/src/constants/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -80,6 +81,7 @@ export default function WriteDescription() {
           address: (address as string) ?? "Unknown",
           status: status as string,
         });
+        console.log(userId);
         router.replace("/clerk/CDashBoard" as never);
       }
     } catch (err) {
@@ -89,7 +91,7 @@ export default function WriteDescription() {
 
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea,{paddingBottom: insets.bottom + SPACING.xlarge}]}>
       <StatusBar style='dark'/>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -155,7 +157,7 @@ export default function WriteDescription() {
               </View>
               <View style={styles.gridItem}>
                 <Text style={styles.gridLabel}>Timestamp</Text>
-                <Text style={styles.gridValue}>{timestamp}</Text>
+                <Text style={styles.gridValue}>{new Date(Array.isArray(timestamp) ? timestamp[0] : timestamp).toLocaleString()}</Text>
               </View>
               <View style={styles.gridItem}>
                 <Text style={styles.gridLabel}>Status</Text>

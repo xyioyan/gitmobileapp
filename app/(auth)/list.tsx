@@ -39,7 +39,7 @@ const list = () => {
     if (!result.canceled) {
       const img = result.assets[0];
       const base64 = await FileSystem.readAsStringAsync(img.uri, { encoding: 'base64' });
-      const filePath = `${user!.id}/${new Date().getTime()}.${img.type === 'image' ? 'jpg' : 'mp4'}`;
+      const filePath = `${user!.id}/profile_image/${new Date().getTime()}.${img.type === 'image' ? 'jpg' : 'mp4'}`;
       const contentType = img.type === 'image' ? 'image/jpg' : 'video/mp4';
       await supabase.storage.from('photos').upload(filePath, decode(base64), { contentType });
       loadImages();

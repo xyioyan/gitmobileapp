@@ -12,6 +12,7 @@ export type Visit = {
   userId: string;
   timestamp: string;
   address: string;
+  status: string;
   // The address field is optional and can be used to store the address of the visit
   synced: number;
 };
@@ -19,6 +20,7 @@ export type Visit = {
 // ✅ Initialize the visits table
 export const initDb = () => {
   // db.runSync(`DROP TABLE IF EXISTS visits;`);
+  // console.log('data base created')
   db.runSync(`
     CREATE TABLE IF NOT EXISTS visits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,6 +31,7 @@ export const initDb = () => {
       userId TEXT,
       timestamp TEXT,
       address TEXT,
+      status TEXT,
       synced INTEGER DEFAULT 0
     );
   `);
@@ -38,8 +41,8 @@ export const initDb = () => {
 // ✅ Save a visit locally
 export const saveVisitLocally = (visit: Omit<Visit, 'id' | 'synced'>) => {
   db.runSync(
-    `INSERT INTO visits (photoUri, description, latitude, longitude, userId, timestamp, address, synced)
-     VALUES (?, ?, ?, ?, ?, ?,?, 0);`,
+    `INSERT INTO visits (photoUri, description, latitude, longitude, userId, timestamp, address,status, synced)
+     VALUES (?, ?, ?, ?, ?, ?,?,?, 0);`,
     [
       visit.photoUri,
       visit.description,
@@ -48,6 +51,7 @@ export const saveVisitLocally = (visit: Omit<Visit, 'id' | 'synced'>) => {
       visit.userId,
       visit.timestamp,
       visit.address,
+      visit.status,
       // 0 for unsynced
     ]
   );

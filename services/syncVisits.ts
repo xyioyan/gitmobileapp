@@ -10,6 +10,7 @@ type Visit = {
   longitude: number;
   timestamp: string;
   address: string;
+  status: string;
   // The address field is optional and can be used to store the address of the visit
   userId: string;
 };
@@ -35,6 +36,7 @@ export async function syncVisitsIfOnline() {
         timestamp: visit.timestamp,
         address: visit.address,
         userId: visit.userId,
+        status: visit.status,
       });
 
       await markVisitAsSynced(Number(visit.id));

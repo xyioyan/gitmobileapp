@@ -51,7 +51,7 @@ const SignIn = () => {
         (data || []).map((o) => ({ label: o.name, value: o.id }))
       );
     }
-    console.log(data);
+    // console.log(data);
     setFetchingOfficers(false);
   };
 

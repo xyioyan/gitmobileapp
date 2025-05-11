@@ -17,9 +17,10 @@ import {
   useCameraPermissions,
   type CameraCapturedPicture,
 } from "expo-camera";
+
 import * as Location from "expo-location";
 import { useAuth } from "@/provider/AuthProvider";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as FileSystem from "expo-file-system";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,6 +28,11 @@ import { LinearGradient } from "expo-linear-gradient";
 const { width, height } = Dimensions.get("window");
 
 export default function CaptureVisitScreen() {
+   const{
+     status,
+     visitId
+    } = useLocalSearchParams();
+    
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const [facing, setFacing] = useState<CameraType>("back");
@@ -275,16 +281,16 @@ export default function CaptureVisitScreen() {
       // console.log("✅ Saved photo to:", newPath);
 
       router.push({
-        pathname: "/clerk/cdashboard/WriteDescription",
+        pathname: "/clerk/visits/CompletionPhotoUploadScreen",
         params: {
           photoUri: encodeURIComponent(newPath),
           description: "Field visit photo",
-          userId,
+          userId: visitId,
           latitude: coords.latitude.toString(),
           longitude: coords.longitude.toString(),
           timestamp,
           address: address ?? "unknown address",
-          status: "pending",
+          status: status,
         },
       });
 
@@ -299,7 +305,7 @@ export default function CaptureVisitScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { paddingBottom: insets.bottom + 50}]}
+      style={[styles.safeArea, { paddingBottom: insets.bottom + 50 }]}
     >
       {photo ? (
         <View style={styles.previewContainer}>
