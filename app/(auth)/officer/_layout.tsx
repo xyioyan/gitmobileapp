@@ -1,68 +1,18 @@
-import { Stack } from 'expo-router';
-import { useAuth } from '@/provider/AuthProvider';
-import React from 'react';
-import { TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from "expo-router";
+import { TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import TabBar from "@/components/TabBar";
+import { useAuth } from "@/provider/AuthProvider";
 
-// Simple stack layout within the authenticated area
-const StackLayout = () => {
-  const { signOut,session } = useAuth();
-// console.log('session',session)
+export default function OfficerLayout() {
+  const { signOut } = useAuth();
+
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#0f0f0f',
-        },
-        headerTintColor: '#fff',
-      }}>
-      <Stack.Screen
-        name="ODashBoard"
-        redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'Officer Dashboard',
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
-            </TouchableOpacity>
-          ),
-        }}></Stack.Screen>
-        <Stack.Screen
-        name="OfficerRealtimeTracking"
-        redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'Officer Dashboard tracking',
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
-            </TouchableOpacity>
-          ),
-        }}></Stack.Screen>
-        <Stack.Screen
-        name="MapView copy"
-        redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'Officer Dashboard dummy',
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
-            </TouchableOpacity>
-          ),
-        }}></Stack.Screen>
-        <Stack.Screen
-        name="OfficerRealtimeTrackingWeb"
-        redirect = {!session} // Redirect to login if not authenticated
-        options={{
-          headerTitle: 'Officer Dashboard tracking',
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
-            </TouchableOpacity>
-          ),
-        }}></Stack.Screen>
-        
-    </Stack>
+    <Tabs tabBar={(props) => <TabBar {...props} />}>
+      <Tabs.Screen name="cdashboard" />
+<Tabs.Screen name="visits" />
+<Tabs.Screen name="list" />
+<Tabs.Screen name="profile" />
+    </Tabs>
   );
-};
-
-export default StackLayout;
+}

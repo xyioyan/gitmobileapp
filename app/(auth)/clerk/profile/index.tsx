@@ -211,7 +211,6 @@ const ProfileScreen: React.FC = () => {
     if (!result.canceled) {
       const newUri = result.assets[0].uri;
       setAvatarUrl(newUri);
-      console.log("new", newUri);
       uploadAndSetAvatar(newUri);
 
       // Here you would upload the image to your backend
@@ -314,13 +313,11 @@ const ProfileScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             <Image
-              source={{
-                uri: profile.profile_image_url
-                  ? `${
-                      profile.profile_image_url.split("?")[0]
-                    }?updated=${Date.now()}`
-                  : require("@/assets/images/avatar.jpg"),
-              }}
+              source={
+                profile.profile_image_url
+                  ? { uri: profile.profile_image_url }
+                  : require("@/assets/images/react-logo.png") // Local fallback
+              }
               style={styles.avatar}
               key={profile.profile_image_url} // Force re-render when URL changes
               onError={(e) => {
@@ -381,7 +378,6 @@ const ProfileScreen: React.FC = () => {
           <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
-        
       </ScrollView>
     </SafeAreaView>
   );

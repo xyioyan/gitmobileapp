@@ -35,23 +35,23 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const ProfileScreen: React.FC = () => {
   const [profile, setProfile] = useState({
-      full_name: "",
-      email: "",
-      officer: "",
-      location: "",
-      phone: "",
-      profile_image_url: "",
-    });
+    full_name: "",
+    email: "",
+    officer: "",
+    location: "",
+    phone: "",
+    profile_image_url: "",
+  });
   const { officerName } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [location, setLocation] = useState("");
   const [phone, setPhone] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState('' );
+  const [avatarUrl, setAvatarUrl] = useState("");
   const { session } = useAuth();
   const { showActionSheetWithOptions } = useActionSheet();
-  
+
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -78,7 +78,7 @@ const ProfileScreen: React.FC = () => {
       setEmail(data.email || "");
       setLocation(data.location || "");
       setPhone(data.phone || "");
-      setAvatarUrl(data.profile_image_url)
+      setAvatarUrl(data.profile_image_url);
       setProfile({
         full_name: data.name || "",
         email: data.email || "",
@@ -97,164 +97,161 @@ const ProfileScreen: React.FC = () => {
         console.warn("Skipping upload: URI is not a local file.");
         return;
       }
-  
+
       // const extension = uri.split(".").pop() || "jpg";
       const contentType = `image/jpg`;
       const filePath = `${session!.user.id}/profile_image/avatar.jpg`;
-  
+
       const fileData = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
-  
+
       const { error: uploadError } = await supabase.storage
         .from("photos")
         .upload(filePath, decode(fileData), {
           contentType,
           upsert: true,
         });
-        console.log(filePath);
+      console.log(filePath);
       if (uploadError) throw uploadError;
-  
+
       const { data: publicUrlData } = supabase.storage
         .from("photos")
         .getPublicUrl(filePath);
-  
+
       const newAvatarUrl = publicUrlData.publicUrl;
-      console.log(newAvatarUrl)
-  
+      console.log(newAvatarUrl);
+
       const { error: updateError } = await supabase
         .from("users")
         .update({ profile_image_url: newAvatarUrl })
         .eq("id", session!.user.id);
-        console.log('succes')
+      console.log("succes");
       if (updateError) throw updateError;
-  
     } catch (error) {
       console.log("Upload failed", (error as Error).message, error);
       Alert.alert("Upload failed", (error as Error).message);
     }
   };
-  
-  
-    // Add these functions
-    const handleAvatarPress = () => {
-      const options = [
-        "Take Photo",
-        "Choose from Library",
-        "Remove Photo",
-        "Cancel",
-      ];
-      const cancelButtonIndex = 3;
-  
-      showActionSheetWithOptions(
-        {
-          options,
-          cancelButtonIndex,
-          destructiveButtonIndex: 2,
-          title: "Change Profile Photo",
-        },
-        (selectedIndex) => {
-          switch (selectedIndex) {
-            case 0:
-              takePhoto();
-              break;
-            case 1:
-              pickImage();
-              break;
-            case 2:
-              removePhoto();
-              break;
-            case cancelButtonIndex:
-              // Canceled
-              break;
-          }
+
+  // Add these functions
+  const handleAvatarPress = () => {
+    const options = [
+      "Take Photo",
+      "Choose from Library",
+      "Remove Photo",
+      "Cancel",
+    ];
+    const cancelButtonIndex = 3;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+        destructiveButtonIndex: 2,
+        title: "Change Profile Photo",
+      },
+      (selectedIndex) => {
+        switch (selectedIndex) {
+          case 0:
+            takePhoto();
+            break;
+          case 1:
+            pickImage();
+            break;
+          case 2:
+            removePhoto();
+            break;
+          case cancelButtonIndex:
+            // Canceled
+            break;
         }
-      );
-    };
-  
-    const takePhoto = async () => {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission required",
-          "Camera access is needed to take photos"
-        );
-        return;
       }
-  
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-  
-      if (!result.canceled) {
-        const newUri = result.assets[0].uri;
-        console.log(newUri);
-        setAvatarUrl(newUri);
-        uploadAndSetAvatar(newUri);
-        // Here you would upload the image to your backend
-      }
-    };
-  
-    const pickImage = async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission required",
-          "Library access is needed to select photos"
-        );
-        return;
-      }
-  
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-  
-      if (!result.canceled) {
-        const newUri = result.assets[0].uri;
-        setAvatarUrl(newUri);
-        console.log('new',newUri);
-        uploadAndSetAvatar(newUri);
-  
-        // Here you would upload the image to your backend
-      }
-    };
-  
-    const removePhoto = () => {
+    );
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
       Alert.alert(
-        "Remove Photo",
-        "Are you sure you want to remove your profile photo?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Remove",
-            style: "destructive",
-            onPress: async () => {
-              setAvatarUrl(""); // Set to null instead of invalid string path
-  
-              // Optional: delete from Supabase or update DB with null
-              const { error: updateError } = await supabase
-                .from("users")
-                .update({ profile_image_url: null })
-                .eq("id", session!.user.id);
-  
-              if (updateError) {
-                console.log(
-                  "Failed to remove avatar from DB",
-                  updateError.message
-                );
-              }
-            },
-          },
-        ]
+        "Permission required",
+        "Camera access is needed to take photos"
       );
-    };
-  
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const newUri = result.assets[0].uri;
+      console.log(newUri);
+      setAvatarUrl(newUri);
+      uploadAndSetAvatar(newUri);
+      // Here you would upload the image to your backend
+    }
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission required",
+        "Library access is needed to select photos"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const newUri = result.assets[0].uri;
+      setAvatarUrl(newUri);
+      console.log("new", newUri);
+      uploadAndSetAvatar(newUri);
+
+      // Here you would upload the image to your backend
+    }
+  };
+
+  const removePhoto = () => {
+    Alert.alert(
+      "Remove Photo",
+      "Are you sure you want to remove your profile photo?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            setAvatarUrl(""); // Set to null instead of invalid string path
+
+            // Optional: delete from Supabase or update DB with null
+            const { error: updateError } = await supabase
+              .from("users")
+              .update({ profile_image_url: null })
+              .eq("id", session!.user.id);
+
+            if (updateError) {
+              console.log(
+                "Failed to remove avatar from DB",
+                updateError.message
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const updateProfile = async () => {
     if (!session) return;
@@ -317,22 +314,23 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.header}>
             <View style={styles.avatarContainer}>
               <Image
-                            source={{
-                              uri: profile.profile_image_url
-                                ? `${
-                                    profile.profile_image_url.split("?")[0]
-                                  }?updated=${Date.now()}`
-                                : require("@/assets/images/avatar.jpg"),
-                            }}
-                            style={styles.avatar}
-                            key={profile.profile_image_url} // Force re-render when URL changes
-                            onError={(e) => {
-                              console.log("Image load error:", e.nativeEvent.error);
-                              // Fallback to default avatar
-                              setProfile((prev) => ({ ...prev, profile_image_url: "" }));
-                            }}
-                          />
-              <TouchableOpacity style={styles.editAvatarButton}  onPress={handleAvatarPress}>
+                source={
+                  profile.profile_image_url
+                    ? { uri: profile.profile_image_url }
+                    : require("@/assets/images/react-logo.png") // Local fallback
+                }
+                style={styles.avatar}
+                key={profile.profile_image_url} // Force re-render when URL changes
+                onError={(e) => {
+                  console.log("Image load error:", e.nativeEvent.error);
+                  // Fallback to default avatar
+                  setProfile((prev) => ({ ...prev, profile_image_url: "" }));
+                }}
+              />
+              <TouchableOpacity
+                style={styles.editAvatarButton}
+                onPress={handleAvatarPress}
+              >
                 <Ionicons name="camera" size={20} color={COLORS.white} />
               </TouchableOpacity>
             </View>
@@ -358,11 +356,6 @@ const ProfileScreen: React.FC = () => {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
               <Text style={styles.nonEditableInput}>{email}</Text>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Officer</Text>
-              <Text style={styles.nonEditableInput}>{officerName}</Text>
             </View>
 
             <View style={styles.inputContainer}>

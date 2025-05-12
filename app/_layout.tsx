@@ -19,7 +19,7 @@ const IinitialLayout = () => {
     
     if (session && !isAuthGroup) {
       if (role === "officer") {
-        router.replace("/officer/ODashBoard");
+        router.replace("/officer/cdashboard" as never);
       } else if (role === "clerk") {
         router.replace("/clerk/cdashboard" as never);
       }

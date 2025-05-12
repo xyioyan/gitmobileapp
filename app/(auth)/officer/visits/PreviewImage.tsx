@@ -179,36 +179,6 @@ export default function VisitDetails() {
               </View>
             </View>
           )}
-          {status === "approved" && !completion_image_url && (
-            <View style={styles.completionPhotoContainer}>
-              <TouchableOpacity
-                style={styles.completionPhotoButton}
-                onPress={() =>
-                  router.push({
-                    pathname: "/clerk/visits/UploadCompletionPhoto",
-                    params: { visitId: id, status: status },
-                  })
-                }
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={[COLORS.primary, COLORS.primaryDark]}
-                  style={styles.completionPhotoGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <Ionicons
-                    name="cloud-upload-outline"
-                    size={20}
-                    color={COLORS.white}
-                  />
-                  <Text style={styles.completionPhotoButtonText}>
-                    Upload Completion Photo
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
         
       {/* Completion Photo Section */}

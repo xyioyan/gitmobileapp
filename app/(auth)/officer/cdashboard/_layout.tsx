@@ -21,7 +21,7 @@ const StackLayout = () => {
         name="index" // Navigate to clerk dashboard page
         redirect={!session} // Redirect to login if not authenticated
         options={{
-          headerTitle: "Clerk Dashboard",
+          headerTitle: "Officer Dashboard",
           headerRight: () => (
             <TouchableOpacity onPress={signOut}>
               <Ionicons name="log-out-outline" size={30} color={"#fff"} />
@@ -31,23 +31,7 @@ const StackLayout = () => {
           headerShown: false
         }}
       ></Stack.Screen>
-      <Stack.Screen
-              name="Camera" // Navigate to camera
-              redirect={!session} // Redirect to login if not authenticated
-              options={{
-                headerTitle: "Clerk Dashboard",
-                headerShown: false,
-              }}
-            ></Stack.Screen>
-            <Stack.Screen
-              name="WriteDescription" // Navigate to write description page
-              redirect={!session} // Redirect to login if not authenticated
-              options={{
-                headerTitle: "Write Description",
-                headerShown: false
-                
-              }}
-            ></Stack.Screen>
+      
     </Stack>
 </>
   );

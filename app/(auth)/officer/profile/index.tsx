@@ -36,7 +36,8 @@ const ProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [officerName, setOfficerName] = useState("");
   const role = session?.user?.user_metadata?.role;
-  const [new_profile_image_url, set_new_profile_image_url] = useState<string>();
+  const [new_profile_image_url, set_new_profile_image_url] =
+    useState<string>("");
   const { showActionSheetWithOptions } = useActionSheet();
 
   const [profile, setProfile] = useState({
@@ -47,6 +48,7 @@ const ProfileScreen: React.FC = () => {
     phone: "",
     profile_image_url: "",
   });
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useFocusEffect(
@@ -264,7 +266,7 @@ const ProfileScreen: React.FC = () => {
 
   const handleEditPress = () => {
     router.push({
-      pathname: "/clerk/profile/ProfileEdit",
+      pathname: "/officer/profile/ProfileEdit",
       params: { officerName },
     });
   };
@@ -314,13 +316,11 @@ const ProfileScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             <Image
-              source={{
-                uri: profile.profile_image_url
-                  ? `${
-                      profile.profile_image_url.split("?")[0]
-                    }?updated=${Date.now()}`
-                  : require("@/assets/images/avatar.jpg"),
-              }}
+              source={
+                profile.profile_image_url
+                  ? { uri: profile.profile_image_url }
+                  : require("@/assets/images/react-logo.png") // Local fallback
+              }
               style={styles.avatar}
               key={profile.profile_image_url} // Force re-render when URL changes
               onError={(e) => {
@@ -381,7 +381,6 @@ const ProfileScreen: React.FC = () => {
           <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
-        
       </ScrollView>
     </SafeAreaView>
   );

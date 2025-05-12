@@ -44,17 +44,8 @@ const StackLayout = () => {
           headerBackTitle: "Back",
         }}
       />
-<Stack.Screen
-        name="UploadCompletionPhoto"
-        redirect={!session}
-        options={{
-          headerTitle: "Take completion photo",
-          headerBackTitle: "Back",
-          headerShown: false,
-        }}
-      />
       <Stack.Screen
-        name="UploadBacklog"
+        name="maps"
         redirect={!session}
         options={{
           headerTitle: "Pending Uploads",
@@ -65,14 +56,7 @@ const StackLayout = () => {
           ),
         }}
       />
-      <Stack.Screen
-        name="CompletionPhotoUploadScreen"
-        redirect={!session}
-        options={{
-          headerTitle: "Write description for completion",
-          headerShown: false,
-        }}
-      />
+      
     </Stack>
   );
 };

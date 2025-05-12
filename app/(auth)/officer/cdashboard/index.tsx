@@ -40,9 +40,9 @@ const ListScreen = () => {
 
   const handleNavigation = () => {
     if (Platform.OS === "web") {
-      router.push("/officer/OfficerRealtimeTrackingWeb");
+      router.push("/officer/visits/maps/OfficerRealtimeTrackingWeb");
     } else {
-      router.push("/officer/OfficerRealtimeTracking");
+      router.push("/officer/visits/maps/OfficerRealtimeTracking");
     }
   };
 
@@ -163,7 +163,7 @@ const ListScreen = () => {
         <Ionicons name="camera-outline" size={30} color={"#fff"} />
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => router.push("/officer/MapView")}
+        onPress={() => router.push("/officer/visits/maps/MapView")}
         style={[styles.fab, { right: 30 }]}
       >
         <Ionicons name="map" size={30} color={"#fff"} />
