@@ -9,10 +9,42 @@ export default function OfficerLayout() {
 
   return (
     <Tabs tabBar={(props) => <TabBar {...props} />}>
-      <Tabs.Screen name="cdashboard" />
-<Tabs.Screen name="visits" />
-<Tabs.Screen name="list" />
-<Tabs.Screen name="profile" />
+       <Tabs.Screen
+        name="cdashboard"
+        options={{
+          title: "Home",
+          headerRight: () => (
+            <TouchableOpacity onPress={signOut} style={{ margin: 5 }}>
+              <Ionicons name="log-out-outline" size={30} color="#000" />
+            </TouchableOpacity>
+          ),
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="visits"
+        options={{
+          title: "Visit History",
+          tabBarHideOnKeyboard: true,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="list"
+        options={{
+          title: "Task",
+          tabBarHideOnKeyboard: true,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarHideOnKeyboard: true,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

@@ -35,6 +35,7 @@ export default function WriteDescription() {
     timestamp,
     address,
     status,
+    assignmentId,
   } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { width, height } = Dimensions.get("window");
@@ -79,6 +80,7 @@ export default function WriteDescription() {
           timestamp: timestamp as string,
           address: (address as string) ?? "Unknown",
           status: status as string,
+          assignmentId: assignmentId as string,
         });
         router.replace("/clerk/CDashBoard" as never);
       }
@@ -155,7 +157,9 @@ export default function WriteDescription() {
               </View>
               <View style={styles.gridItem}>
                 <Text style={styles.gridLabel}>Timestamp</Text>
-                <Text style={styles.gridValue}>{timestamp}</Text>
+                <Text style={styles.gridValue}>
+                  {typeof timestamp === "string" ? new Date(timestamp).toLocaleString() : "Invalid date"}
+                </Text>
               </View>
               <View style={styles.gridItem}>
                 <Text style={styles.gridLabel}>Status</Text>
@@ -181,6 +185,10 @@ export default function WriteDescription() {
               multiline
               textAlignVertical="top"
             />
+            {assignmentId&&(<View>
+                <Text style={styles.gridLabel}>Assignment Id</Text>
+                <Text style={styles.gridValue}>{assignmentId}</Text>
+              </View>)}
           </View>
 
           {/* Save Button */}

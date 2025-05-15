@@ -19,7 +19,7 @@ import {
 } from "expo-camera";
 import * as Location from "expo-location";
 import { useAuth } from "@/provider/AuthProvider";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as FileSystem from "expo-file-system";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,6 +28,8 @@ const { width, height } = Dimensions.get("window");
 
 export default function CaptureVisitScreen() {
   const insets = useSafeAreaInsets();
+  const { assignmentId } = useLocalSearchParams();
+  
   const { session } = useAuth();
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
@@ -285,6 +287,7 @@ export default function CaptureVisitScreen() {
           timestamp,
           address: address ?? "unknown address",
           status: "pending",
+          assignmentId: assignmentId,
         },
       });
 

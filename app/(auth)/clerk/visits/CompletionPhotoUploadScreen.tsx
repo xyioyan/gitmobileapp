@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import { SPACING } from "@/src/constants/theme";
+import { COLORS, SPACING } from "@/src/constants/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -161,10 +161,15 @@ export default function WriteDescription() {
               </View>
               <View style={styles.gridItem}>
                 <Text style={styles.gridLabel}>Status</Text>
-                <Text style={[
-                  styles.gridValue,
-                  status === "Completed" ? styles.statusSuccess : styles.statusPending
-                ]}>
+                <Text 
+                  style={[
+                      styles.gridValue,
+                      status === "approved"
+                        ? styles.statusApproved
+                        : status === "pending"
+                        ? styles.statusPending
+                        : styles.statusSuccess,
+                    ]}>
                   {status}
                 </Text>
               </View>
@@ -346,6 +351,9 @@ const styles = StyleSheet.create({
   },
   statusPending: {
     color: '#f59e0b',
+  },
+  statusApproved: {
+    color: COLORS.approved,
   },
 
   // ===== Input =====

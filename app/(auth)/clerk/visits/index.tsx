@@ -10,14 +10,11 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-// import {  } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/provider/AuthProvider";
 import { supabase } from "@/config/initSupabase";
-// import { FileObject } from "@supabase/storage-js";
 import { router } from "expo-router";
-// import { Timestamp } from "react-native-reanimated/lib/typescript/commonTypes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   COLORS,
@@ -25,6 +22,7 @@ import {
   TYPOGRAPHY,
   SHADOWS,
   COMPONENTS,
+  BORDER_RADIUS,
 } from "@/src/constants/theme";
 import { StatusBar } from "expo-status-bar";
 
@@ -38,11 +36,12 @@ type Visit = {
   picture_taken_at: string;
   completion_image_url: string;
   completion_taken_at: string;
-  completion_address:string;
+  completion_address: string;
   completion_description: string;
   user_id: string;
   status: string;
   address: string;
+  assignmentId: string | null;
 };
 
 const VisitHistory = () => {
@@ -50,7 +49,6 @@ const VisitHistory = () => {
   const { user, session } = useAuth();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
-  // Inside component:
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -80,37 +78,35 @@ const VisitHistory = () => {
     if (error) console.error("Error fetching visits:", error);
   };
 
- const onRemoveImage = async (fileName: string) => {
-  const fullPath = `${user!.id}/${fileName}`;
+  const onRemoveImage = async (fileName: string) => {
+    const fullPath = `${user!.id}/${fileName}`;
 
-  // Remove from storage
-  const { error: storageError } = await supabase.storage
-    .from("photos")
-    .remove([fullPath]);
+    const { error: storageError } = await supabase.storage
+      .from("photos")
+      .remove([fullPath]);
 
-  if (storageError) {
-    console.error("Storage deletion error:", storageError);
-    Alert.alert("Failed", "Could not delete image from storage.");
-    return;
-  }
+    if (storageError) {
+      console.error("Storage deletion error:", storageError);
+      Alert.alert("Failed", "Could not delete image from storage.");
+      return;
+    }
 
-  // Delete visit entry
-  const { data: { publicUrl } } = supabase.storage.from("photos").getPublicUrl(fullPath);
+    const { data: { publicUrl } } = supabase.storage.from("photos").getPublicUrl(fullPath);
 
-  const { error: dbError } = await supabase
-    .from("visits")
-    .delete()
-    .eq("image_url", publicUrl)
-    .eq("user_id", user!.id);
+    const { error: dbError } = await supabase
+      .from("visits")
+      .delete()
+      .eq("image_url", publicUrl)
+      .eq("user_id", user!.id);
 
-  if (dbError) {
-    console.error("Visit deletion error:", dbError);
-    Alert.alert("Failed", "Could not delete visit from database.");
-  } else {
-    Alert.alert("Image deleted", "Image successfully deleted.");
-    fetchVisits();
-  }
-};
+    if (dbError) {
+      console.error("Visit deletion error:", dbError);
+      Alert.alert("Failed", "Could not delete visit from database.");
+    } else {
+      Alert.alert("Image deleted", "Image successfully deleted.");
+      fetchVisits();
+    }
+  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -152,7 +148,12 @@ const VisitHistory = () => {
           { paddingBottom: insets.bottom + SPACING.xlarge },
         ]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
         }
       >
         {visits.length === 0 ? (
@@ -168,7 +169,7 @@ const VisitHistory = () => {
               onLongPress={() => {
                 const imageUrl = visit.image_url;
                 const parts = imageUrl.split("/");
-                const fileName = parts[parts.length - 1]; // Extracts 'filename.jpg'
+                const fileName = parts[parts.length - 1];
 
                 Alert.alert(
                   "Delete Visit",
@@ -193,8 +194,19 @@ const VisitHistory = () => {
                   },
                 })
               }
-              style={[COMPONENTS.card, styles.visitCard]}
+              style={[
+                COMPONENTS.card, 
+                styles.visitCard,
+                visit.assignmentId && styles.assignmentCard
+              ]}
             >
+              {visit.assignmentId && (
+                <View style={styles.assignmentBadge}>
+                  <Ionicons name="briefcase-outline" size={14} color={COLORS.white} />
+                  <Text style={styles.assignmentBadgeText}>Assignment</Text>
+                </View>
+              )}
+
               {visit.image_url ? (
                 <Image
                   style={styles.visitImage}
@@ -211,26 +223,28 @@ const VisitHistory = () => {
               )}
 
               <View style={styles.visitDetails}>
-                <Text style={TYPOGRAPHY.body} numberOfLines={1}>
-                  <Text style={styles.label}>Status: </Text>
-                  <Text
-                    style={[
-                      styles.statusText,
-                      visit.status === "approved"
-                        ? styles.approved
-                        : visit.status === "pending"
-                        ? styles.pending
-                        : styles.completed,
-                    ]}
-                  >
-                    {visit.status}
+                <View style={styles.statusRow}>
+                  <Text style={TYPOGRAPHY.body}>
+                    <Text style={styles.label}>Status: </Text>
+                    <Text
+                      style={[
+                        styles.statusText,
+                        visit.status === "approved"
+                          ? styles.approved
+                          : visit.status === "pending"
+                          ? styles.pending
+                          : styles.completed,
+                      ]}
+                    >
+                      {visit.status}
+                    </Text>
                   </Text>
-                </Text>
+                </View>
 
                 {visit.description && (
                   <Text
                     style={[TYPOGRAPHY.body, styles.description]}
-                    numberOfLines={2}
+                    numberOfLines={1}
                   >
                     {visit.description}
                   </Text>
@@ -296,6 +310,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: SPACING.medium,
     padding: SPACING.medium,
+    position: "relative",
+  },
+  assignmentCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
+  },
+  assignmentBadge: {
+    position: "absolute",
+    top: -8,
+    right: SPACING.medium,
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: SPACING.small,
+    paddingVertical: SPACING.tiny,
+    borderRadius: BORDER_RADIUS.full,
+    ...SHADOWS.small,
+  },
+  assignmentBadgeText: {
+    ...TYPOGRAPHY.heading6,
+    color: COLORS.white,
+    marginLeft: SPACING.tiny,
   },
   visitImage: {
     width: 80,
@@ -314,6 +350,11 @@ const styles = StyleSheet.create({
   visitDetails: {
     flex: 1,
     paddingLeft: SPACING.medium,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   label: {
     fontWeight: "600",
@@ -347,17 +388,6 @@ const styles = StyleSheet.create({
     marginTop: SPACING.small,
     color: COLORS.gray500,
     fontFamily: "monospace",
-  },
-  fab: {
-    position: "absolute",
-    right: SPACING.large,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    ...SHADOWS.medium,
   },
 });
 

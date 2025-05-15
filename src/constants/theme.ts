@@ -9,6 +9,7 @@ export const COLORS = {
   // Status Colors
   success: '#10b981',
   warning: '#f59e0b',
+  info: '#3178c6',
   error: '#ef4444',
   approved: '#3b82f6',
   

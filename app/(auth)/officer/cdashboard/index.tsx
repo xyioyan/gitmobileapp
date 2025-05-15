@@ -1,241 +1,349 @@
+// const List = () => {
+//   const { user } = useAuth();
+//   const [files, setFiles] = useState<FileObject[]>([]);
+
+//   useEffect(() => {
+//     if (!user) return;
+//     loadImages(); // Load user images
+//   }, [user]);
+
+//   const loadImages = async () => {
+//     const { data } = await supabase.storage.from('photos').list(user!.id);
+//     if (data) {
+//       setFiles(data);
+//     }
+//   };
+
+//   const CameraView = () => {
+//     router.push('/clerk/cdashboard/Camera' as never);
+
+//     // Save image if not cancelled
+
+//   };
+//   useEffect(() => {
+//     const initialize = async () => {
+//       if (Platform.OS !== 'web') {
+//       const {syncVisitsIfOnline} = await import('@/services/syncVisits');
+//       const { initDb } = await import('@/storage/offlineQueue');
+//       initDb(); // Initialize the database
+//       await syncVisitsIfOnline(); // Sync visits if online
+//       await loadImages();   // Then load images
+//       }
+//     };
+
+//     initialize();
+//   }, []);
+
+//   const onRemoveImage = async (item: FileObject, listIndex: number) => {
+//     supabase.storage.from('photos').remove([`${user!.id}/${item.name}`]);
+//     const fileName = `${user!.id}/${item.name}`;
+//     const {
+//       data: { publicUrl },
+//     } = supabase.storage.from('photos').getPublicUrl(fileName);
+//     // console.log('public URL: ', publicUrl);
+//     const { data, error } = await supabase
+//       .from('visits')
+//       .delete()
+//       .eq('user_id', user!.id)
+//       .eq('image_url', publicUrl);
+//       // console.log('Image deleted:', publicUrl);
+//       // console.log('Visit deleted:', data);
+//     const newFiles = [...files];
+//     newFiles.splice(listIndex, 1);
+//     setFiles(newFiles);
+//   };
+
+//   function VisitHistory() {
+//     router.push('/clerk/visits/VisitHistory' as never);
+
+//   }
+
+//
+//     <TouchableOpacity onPress={CameraView} style={[styles.fab,{right: 30}]} >
+//         <Ionicons name="camera-outline" size={30} color={'#fff'} />
+//       </TouchableOpacity>
+//       {/* FAB to Show History */}
+//       <TouchableOpacity onPress={VisitHistory} style={[styles.fab,{left: 30}]} >
+//         <Ionicons name="book-outline" size={30} color={'#fff'} />
+//       </TouchableOpacity>
+//       <TouchableOpacity onPress={loadImages} style={[styles.fab,{left: 120}]} >
+//         <Ionicons name="reload-outline" size={30} color={'#fff'} />
+//       </TouchableOpacity>
+//     </View>
+//
+
+import * as React from "react";
 import {
+  // StatusBar,
+  Text,
   View,
   StyleSheet,
   Image,
-  Text,
+  Dimensions,
+  Animated,
   TouchableOpacity,
-  ScrollView,
   Platform,
+  // SafeAreaView,
+  KeyboardAvoidingView,
+  FlatList,
+  SafeAreaView,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
-import { useAuth } from "@/provider/AuthProvider";
-import * as FileSystem from "expo-file-system";
-import { decode } from "base64-arraybuffer";
-import { supabase } from "@/config/initSupabase";
-import ImageItem from "@/components/ImageItem";
-import { router } from "expo-router";
-// import { View,, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  SHADOWS,
+  COMPONENTS,
+} from "@/src/constants/theme";
+const { width, height } = Dimensions.get("window");
+import { getMovies, Movie } from "@/assets/getmoviesofficer";
+import Genres from "@/components/Genres";
+import { LinearGradient } from "expo-linear-gradient";
+import { router} from "expo-router";
+import { useEffect } from "react";
+import { StatusBar } from 'expo-status-bar';
 
-interface Visit {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  picture_taken_at: string;
-  image_url: string;
-  user_id: string;
+
+
+
+
+// Updated constants using theme spacing
+const ITEM_SIZE = width * 0.8;
+const EMPTY_ITEM_SIZE = (width - ITEM_SIZE) / 2;
+const BACKDROP_HEIGHT = height * 0.6;
+const CARD_HEIGHT = 500;
+
+const Loading = () => (
+  <View style={styles.loadingContainer}>
+    <Text style={TYPOGRAPHY.heading2}>Loading movies...</Text>
+  </View>
+);
+
+interface BackdropProps {
+  movies: Movie[];
+  scrollX: Animated.Value;
 }
 
-const ListScreen = () => {
-  const [visitList, setVisitList] = useState<Visit[]>([]);
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    loadImages();
-  }, [user]);
-
-  const handleNavigation = () => {
-    if (Platform.OS === "web") {
-      router.push("/officer/visits/maps/OfficerRealtimeTrackingWeb");
-    } else {
-      router.push("/officer/visits/maps/OfficerRealtimeTracking");
-    }
-  };
-
-  const loadImages = async () => {
-    setLoading(true);
-    const { data: userResponse, error: userFetchError } =
-      await supabase.auth.getUser();
-    if (userFetchError || !userResponse?.user) {
-      console.error("Error fetching current user:", userFetchError);
-      setLoading(false); // <-- add this
-      return;
-    }
-
-    const officerId = userResponse.user.id;
-
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("clerks")
-      .eq("id", officerId)
-      .single();
-
-    if (userError || !userData) {
-      console.error("Error fetching officer clerks list:", userError);
-      return;
-    }
-
-    const clerkIds = userData.clerks;
-    if (!clerkIds || clerkIds.length === 0) {
-      console.log("No clerks assigned to this officer.");
-      setVisitList([]);
-      setLoading(false); // <-- add this
-      return;
-    }
-
-    const { data: visits, error: visitsError } = await supabase
-      .from("visits")
-      .select("*")
-      .in("user_id", clerkIds);
-
-    if (visitsError) {
-      console.error("Error fetching visits:", visitsError);
-      setLoading(false); // <-- add this
-      return;
-    }
-
-    const { data: clerkUsers, error: clerkFetchError } = await supabase
-      .from("users")
-      .select("id, name")
-      .in("id", clerkIds);
-
-    if (clerkFetchError) {
-      console.error("Error fetching clerk user info:", clerkFetchError);
-      setLoading(false); // <-- add this
-      return;
-    }
-
-    const clerkNameMap = clerkUsers.reduce((acc, clerk) => {
-      acc[clerk.id] = clerk.name;
-      return acc;
-    }, {} as Record<string, string>);
-
-    const mergedVisits: Visit[] = visits.map((visit: any) => ({
-      ...visit,
-      name: clerkNameMap[visit.user_id] || "Unknown Clerk",
-    }));
-
-    setVisitList(mergedVisits);
-    setLoading(false);
-  };
-
-  const onSelectImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-    });
-
-    if (!result.canceled) {
-      const img = result.assets[0];
-      const base64 = await FileSystem.readAsStringAsync(img.uri, {
-        encoding: "base64",
-      });
-      const filePath = `${user!.id}/${Date.now()}.jpg`;
-      await supabase.storage.from("photos").upload(filePath, decode(base64), {
-        contentType: "image/jpg",
-      });
-      loadImages();
-    }
-  };
-
+const Backdrop: React.FC<BackdropProps> = ({ movies, scrollX }) => {
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        {visitList.length > 0 ? (
-          visitList.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <Image source={{ uri: item.image_url }} style={styles.image} />
-              <Text style={styles.name}>👤 {item.name}</Text>
-              <Text style={styles.coords}>
-                📍 {item.latitude.toFixed(5)}, {item.longitude.toFixed(5)}
-              </Text>
-              <Text style={styles.timestamp}>
-                🕒 {new Date(item.picture_taken_at).toLocaleString()}
-              </Text>
-            </View>
-          ))
-        ) : !loading ? (
-          <Text style={styles.emptyMessage}>
-            No clerks assigned to this officer.
-          </Text>
-        ) : null}
-      </ScrollView>
-
-      {/* FABs */}
-      <TouchableOpacity
-        onPress={onSelectImage}
-        style={[styles.fab, { left: 20 }]}
-      >
-        <Ionicons name="camera-outline" size={30} color={"#fff"} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => router.push("/officer/visits/maps/MapView")}
-        style={[styles.fab, { right: 30 }]}
-      >
-        <Ionicons name="map" size={30} color={"#fff"} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={handleNavigation}
-        style={[styles.fab, { right: 110 }]}
-      >
-        <Ionicons name="map" size={30} color={"#fff"} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={loadImages}
-        style={[styles.fab, { right: 190 }]}
-      >
-        <Ionicons name="refresh" size={30} color={"#fff"} />
-      </TouchableOpacity>
+    <View style={{ height: BACKDROP_HEIGHT, width, position: "absolute" }}>
+      <FlatList
+        data={movies}
+        keyExtractor={(item) => item.key + "-backdrop"}
+        removeClippedSubviews={false}
+        contentContainerStyle={{ width, height: BACKDROP_HEIGHT }}
+        renderItem={({ item, index }) => {
+          if (!item.backdrop) {
+            return null;
+          }
+          const translateX = scrollX.interpolate({
+            inputRange: [(index - 2) * ITEM_SIZE, (index - 1) * ITEM_SIZE],
+            outputRange: [0, width],
+          });
+          return (
+            <Animated.View
+              removeClippedSubviews={false}
+              style={{
+                position: "absolute",
+                width: translateX,
+                height,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                source={{ uri: item.backdrop }}
+                style={{
+                  width,
+                  height: BACKDROP_HEIGHT,
+                  position: "absolute",
+                }}
+              />
+              <LinearGradient
+                colors={["rgba(0,0,0,0.8)", "rgba(0,0,0,0)"]}
+                style={{
+                  height: BACKDROP_HEIGHT,
+                  width,
+                  position: "absolute",
+                }}
+              />
+            </Animated.View>
+          );
+        }}
+      />
+      <LinearGradient
+        colors={["rgba(0, 0, 0, 0.3)", COLORS.backgroundLight]}
+        style={{
+          height: BACKDROP_HEIGHT,
+          width,
+          position: "absolute",
+          bottom: 0,
+        }}
+      />
     </View>
   );
 };
 
+export default function MovieCarousel() {
+  const insets = useSafeAreaInsets();
+  const [movies, setMovies] = React.useState<Movie[]>([]);
+  const scrollX = React.useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const initialize = async () => {
+      if (Platform.OS !== "web") {
+        const { syncVisitsIfOnline } = await import("@/services/syncVisits");
+        const { initDb } = await import("@/storage/offlineQueue");
+        initDb();
+        await syncVisitsIfOnline();
+      }
+    };
+    initialize();
+  }, []);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const moviesData = await getMovies();
+      setMovies([
+        { key: "empty-left" } as Movie,
+        ...moviesData,
+        { key: "empty-right" } as Movie,
+      ]);
+    };
+    fetchData();
+  }, []);
+
+  if (movies.length === 0) {
+    return <Loading />;
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark"  />
+      <View style={styles.container}>
+        <Backdrop movies={movies} scrollX={scrollX} />
+        <StatusBar hidden />
+
+        <Animated.FlatList
+          showsHorizontalScrollIndicator={false}
+          data={movies}
+          keyExtractor={(item) => item.key}
+          horizontal
+          bounces={false}
+          decelerationRate={Platform.OS === "ios" ? 0.9 : 0.95}
+          renderToHardwareTextureAndroid
+          contentContainerStyle={{
+            alignItems: "center",
+            paddingBottom: insets.bottom + SPACING.xlarge, // Safe area for tab bar
+          }}
+          snapToInterval={ITEM_SIZE}
+          snapToAlignment="start"
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+          renderItem={({ item, index }) => {
+            if (!item.poster) {
+              return <View style={{ width: EMPTY_ITEM_SIZE }} />;
+            }
+
+            const inputRange = [
+              (index - 2) * ITEM_SIZE,
+              (index - 1) * ITEM_SIZE,
+              index * ITEM_SIZE,
+            ];
+
+            const translateY = scrollX.interpolate({
+              inputRange,
+              outputRange: [40, 0, 40],
+              extrapolate: "clamp",
+            });
+
+            const scale = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.9, 1.1, 0.9],
+              extrapolate: "clamp",
+            });
+
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.7, 1, 0.7],
+              extrapolate: "clamp",
+            });
+
+            return (
+              <View style={{ width: ITEM_SIZE }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (item.navigateTo) {
+                      router.push(item.navigateTo as never);
+                    }
+                  }}
+                  activeOpacity={0.9}
+                >
+                  <Animated.View
+                    style={[
+                      COMPONENTS.card,
+                      {
+                        height: CARD_HEIGHT,
+                        marginHorizontal: SPACING.small,
+                        padding: SPACING.large,
+                        alignItems: "center",
+                        transform: [{ translateY }, { scale }],
+                        opacity,
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: item.poster }}
+                      style={styles.posterImage}
+                    />
+                    <View style={styles.textContainer}>
+                      <Text style={TYPOGRAPHY.heading2} numberOfLines={1}>
+                        {item.title}
+                      </Text>
+                      <Genres genres={item.genres} />
+                      <Text style={TYPOGRAPHY.body} numberOfLines={3}>
+                        {item.description}
+                      </Text>
+                    </View>
+                  </Animated.View>
+                </TouchableOpacity>
+              </View>
+            );
+          }}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#151515",
+    backgroundColor: COLORS.backgroundLight,
+    // paddingTop: 28,
   },
-  fab: {
-    borderWidth: 1,
+  loadingContainer: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    width: 70,
-    position: "absolute",
-    bottom: 40,
-    right: 30,
-    height: 70,
-    backgroundColor: "#2b825b",
-    borderRadius: 100,
+    backgroundColor: COLORS.backgroundLight,
   },
-  card: {
-    backgroundColor: "#1f1f1f",
-    padding: 10,
-    borderRadius: 12,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#333",
+  container: {
+    flex: 1,
   },
-  image: {
+  posterImage: {
     width: "100%",
-    height: 200,
-    borderRadius: 8,
+    height: CARD_HEIGHT * 0.6,
+    resizeMode: "cover",
+    borderRadius: 12,
+    marginBottom: SPACING.medium,
   },
-  name: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-    marginTop: 8,
-  },
-  coords: {
-    color: "#ccc",
-    marginTop: 4,
-  },
-  timestamp: {
-    color: "#aaa",
-    marginTop: 4,
-    fontStyle: "italic",
-  },
-  emptyMessage: {
-    color: "#aaa",
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 40,
+  textContainer: {
+    flex: 1,
+    width: "100%",
+    paddingHorizontal: SPACING.small,
   },
 });
-
-export default ListScreen;

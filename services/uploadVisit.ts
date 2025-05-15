@@ -12,6 +12,7 @@ export async function uploadVisit({
   address,
   userId,
   status,
+  assignmentId,
 }: {
   photoUri: string;
   description: string;
@@ -21,6 +22,7 @@ export async function uploadVisit({
   address: string;
   userId: string;
   status: string;
+  assignmentId: string;
 }) {
   // console.log('file at upload: ',photoUri)
   try {
@@ -114,6 +116,7 @@ export async function uploadVisit({
           picture_taken_at: timestamp,
           address,
           status: "pending",
+          assignmentId: assignmentId,
         },
       ]);
 

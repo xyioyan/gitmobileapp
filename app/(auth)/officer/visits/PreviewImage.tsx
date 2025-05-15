@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+
 import {
   COLORS,
   SPACING,
@@ -19,6 +21,7 @@ import {
 } from "@/src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { supabase } from "@/config/initSupabase";
 
 export default function VisitDetails() {
   const insets = useSafeAreaInsets();
@@ -179,59 +182,137 @@ export default function VisitDetails() {
               </View>
             </View>
           )}
+          {status === "pending" && !completion_image_url && (
+            <View style={styles.completionPhotoContainer}>
+              <TouchableOpacity
+                style={styles.completionPhotoButton}
+                onPress={async () => {
+                  try {
+                    const { error } = await supabase
+                      .from("visits")
+                      .update({ status: "approved" })
+                      .eq("id", id);
+                      console.log('while upload : ',error);
+
+                    if (error) {
+                      console.error("Approval failed:", error);
+                      Toast.show({
+                        type: "error",
+                        text1: "Error",
+                        text2: "Failed to approve the visit.",
+                      });
+                      return;
+                    }
+
+                    Toast.show({
+                      type: "success",
+                      text1: "Success",
+                      text2: "Visit approved successfully.",
+                    });
+
+                    router.back(); // or refresh logic here
+                  } catch (err) {
+                    console.error("Unexpected error:", err);
+                  }
+                }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[COLORS.primary, COLORS.primaryDark]}
+                  style={styles.completionPhotoGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={20}
+                    color={COLORS.white}
+                  />
+                  <Text style={styles.completionPhotoButtonText}>Approve</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-        
-      {/* Completion Photo Section */}
-      {completion_image_url && (
-        <>
-          <Text style={[TYPOGRAPHY.heading3, { marginTop: SPACING.large, marginBottom: SPACING.small }]}>
-            Completion Photo
-          </Text>
-          <Image
-            source={{
-              uri: Array.isArray(completion_image_url)
-                ? completion_image_url[0]
-                : completion_image_url,
-            }}
-            style={styles.preview}
-            resizeMode="cover"
-          />
-          <View style={styles.detailsContainer}>
-            {completion_description && (
-              <View style={styles.detailItem}>
-                <Text style={[TYPOGRAPHY.heading4, styles.label]}>Completion Description</Text>
-                <Text style={[TYPOGRAPHY.body, styles.value]}>{completion_description}</Text>
-              </View>
-            )}
-            {completion_taken_at && (
-              <View style={styles.detailItem}>
-                <Text style={[TYPOGRAPHY.heading4, styles.label]}>Completion Time</Text>
-                <View style={styles.dateRow}>
-                  <Ionicons name="time-outline" size={16} color={COLORS.gray500} />
+
+        {/* Completion Photo Section */}
+        {completion_image_url && (
+          <>
+            <Text
+              style={[
+                TYPOGRAPHY.heading3,
+                { marginTop: SPACING.large, marginBottom: SPACING.small },
+              ]}
+            >
+              Completion Photo
+            </Text>
+            <Image
+              source={{
+                uri: Array.isArray(completion_image_url)
+                  ? completion_image_url[0]
+                  : completion_image_url,
+              }}
+              style={styles.preview}
+              resizeMode="cover"
+            />
+            <View style={styles.detailsContainer}>
+              {completion_description && (
+                <View style={styles.detailItem}>
+                  <Text style={[TYPOGRAPHY.heading4, styles.label]}>
+                    Completion Description
+                  </Text>
                   <Text style={[TYPOGRAPHY.body, styles.value]}>
-                    {new Date(Array.isArray(completion_taken_at) ? completion_taken_at[0] : completion_taken_at).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {completion_description}
                   </Text>
                 </View>
-              </View>
-            )}
-            {completion_address && (
-              <View style={styles.detailItem}>
-                <Text style={[TYPOGRAPHY.heading4, styles.label]}>Completion Location</Text>
-                <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={16} color={COLORS.primary} />
-                  <Text style={[TYPOGRAPHY.body, styles.value]}>{completion_address}</Text>
+              )}
+              {completion_taken_at && (
+                <View style={styles.detailItem}>
+                  <Text style={[TYPOGRAPHY.heading4, styles.label]}>
+                    Completion Time
+                  </Text>
+                  <View style={styles.dateRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={COLORS.gray500}
+                    />
+                    <Text style={[TYPOGRAPHY.body, styles.value]}>
+                      {new Date(
+                        Array.isArray(completion_taken_at)
+                          ? completion_taken_at[0]
+                          : completion_taken_at
+                      ).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
-          </View>
-        </>
-      )}
+              )}
+              {completion_address && (
+                <View style={styles.detailItem}>
+                  <Text style={[TYPOGRAPHY.heading4, styles.label]}>
+                    Completion Location
+                  </Text>
+                  <View style={styles.locationRow}>
+                    <Ionicons
+                      name="location-outline"
+                      size={16}
+                      color={COLORS.primary}
+                    />
+                    <Text style={[TYPOGRAPHY.body, styles.value]}>
+                      {completion_address}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

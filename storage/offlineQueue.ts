@@ -13,6 +13,7 @@ export type Visit = {
   timestamp: string;
   address: string;
   status: string;
+  assignmentId: string;
   // The address field is optional and can be used to store the address of the visit
   synced: number;
 };
@@ -32,6 +33,7 @@ export const initDb = () => {
       timestamp TEXT,
       address TEXT,
       status TEXT,
+      assignmentId TEXT,
       synced INTEGER DEFAULT 0
     );
   `);
@@ -41,8 +43,8 @@ export const initDb = () => {
 // ✅ Save a visit locally
 export const saveVisitLocally = (visit: Omit<Visit, 'id' | 'synced'>) => {
   db.runSync(
-    `INSERT INTO visits (photoUri, description, latitude, longitude, userId, timestamp, address,status, synced)
-     VALUES (?, ?, ?, ?, ?, ?,?,?, 0);`,
+    `INSERT INTO visits (photoUri, description, latitude, longitude, userId, timestamp, address,status,assignmentId, synced)
+     VALUES (?, ?, ?, ?, ?, ?,?,?,?, 0);`,
     [
       visit.photoUri,
       visit.description,
@@ -52,6 +54,7 @@ export const saveVisitLocally = (visit: Omit<Visit, 'id' | 'synced'>) => {
       visit.timestamp,
       visit.address,
       visit.status,
+      visit.assignmentId,
       // 0 for unsynced
     ]
   );
