@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   SafeAreaView,
+  Modal,
+  Pressable,
 } from "react-native";
 import { supabase } from "@/config/initSupabase";
 import {
@@ -23,6 +25,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { format } from "date-fns";
+
+// Types
+type AssignmentStatus = "pending" | "in_progress" | "completed";
 
 export type Assignment = {
   id: string;
@@ -30,17 +37,294 @@ export type Assignment = {
   address: string;
   assigned_date: string;
   completion_date: string | null;
-  status: string;
+  status: AssignmentStatus;
 };
 
+type StatusConfig = {
+  color: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+};
+
+// Utility Functions
+const getStatusConfig = (status: AssignmentStatus): StatusConfig => {
+  const configs: Record<AssignmentStatus, StatusConfig> = {
+    pending: {
+      color: COLORS.warning,
+      icon: "time-outline",
+      label: "Pending",
+    },
+    in_progress: {
+      color: COLORS.info,
+      icon: "construct-outline",
+      label: "In Progress",
+    },
+    completed: {
+      color: COLORS.success,
+      icon: "checkmark-done-outline",
+      label: "Completed",
+    },
+  };
+
+  return configs[status];
+};
+
+const formatDate = (dateString: string | null): string => {
+  if (!dateString) return "N/A";
+  return format(new Date(dateString), "MMM d, yyyy");
+};
+
+// Components
+const AssignmentStatusBadge = ({ status }: { status: AssignmentStatus }) => {
+  const { color, icon, label } = getStatusConfig(status);
+
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: color }]}>
+      <Ionicons
+        name={icon}
+        size={ICON.small}
+        color={COLORS.white}
+        style={styles.statusIcon}
+      />
+      <Text style={styles.statusText}>{label}</Text>
+    </View>
+  );
+};
+
+const AssignmentDetailRow = ({
+  icon,
+  text,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  text: string;
+}) => (
+  <View style={styles.detailRow}>
+    <Ionicons name={icon} size={ICON.small} color={COLORS.gray500} />
+    <Text style={[TYPOGRAPHY.body, styles.detailText]}>{text}</Text>
+  </View>
+);
+
+const CompletedAssignmentRow = ({
+  completionDate,
+}: {
+  completionDate: string | null;
+}) => (
+  <View style={styles.completedRow}>
+    <Ionicons name="checkmark-done" size={ICON.medium} color={COLORS.success} />
+    <Text style={[TYPOGRAPHY.body, styles.completedText]}>
+      Completed on {formatDate(completionDate)}
+    </Text>
+  </View>
+);
+
+const AssignmentCard = ({
+  item,
+  onPress,
+  isUpdating,
+}: {
+  item: Assignment;
+  onPress: () => void;
+  isUpdating: boolean;
+}) => {
+  return (
+    <View style={[COMPONENTS.card]}>
+      <View
+        style={[
+          styles.cardHeader,
+          {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          },
+        ]}
+      >
+        <Text
+          style={[TYPOGRAPHY.heading3, { flex: 1 }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {item.task}
+        </Text>
+        <AssignmentStatusBadge status={item.status} />
+      </View>
+
+      <AssignmentDetailRow icon="location-outline" text={item.address} />
+      <AssignmentDetailRow
+        icon="calendar-outline"
+        text={`Assigned: ${formatDate(item.assigned_date)}`}
+      />
+
+      {item.status === "pending" || item.status === "in_progress" ? (
+        <TouchableOpacity
+          style={[
+            COMPONENTS.buttonPrimary,
+            item.status === "in_progress" && {
+              backgroundColor: COLORS.success,
+            },
+          ]}
+          onPress={onPress}
+          disabled={isUpdating}
+        >
+          {isUpdating ? (
+            <ActivityIndicator color={COLORS.white} />
+          ) : (
+            <Text style={TYPOGRAPHY.buttonText}>
+              {item.status === "pending" ? "Start Assignment" : "View Status"}
+            </Text>
+          )}
+        </TouchableOpacity>
+      ) : (
+        <CompletedAssignmentRow completionDate={item.completion_date} />
+      )}
+    </View>
+  );
+};
+
+const FilterModal = ({
+  visible,
+  onClose,
+  statusFilter,
+  setStatusFilter,
+  dateFilter,
+  setDateFilter,
+  applyFilters,
+  resetFilters,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  statusFilter: AssignmentStatus | null;
+  setStatusFilter: (status: AssignmentStatus | null) => void;
+  dateFilter: Date | null;
+  setDateFilter: (date: Date | null) => void;
+  applyFilters: () => void;
+  resetFilters: () => void;
+}) => {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={TYPOGRAPHY.heading2}>Filter Assignments</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons
+                name="close"
+                size={ICON.medium}
+                color={COLORS.gray500}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={TYPOGRAPHY.heading6}>Status</Text>
+            <View style={styles.statusFilterContainer}>
+              {(
+                ["pending", "in_progress", "completed"] as AssignmentStatus[]
+              ).map((status) => (
+                <Pressable
+                  key={status}
+                  style={[
+                    styles.statusFilterButton,
+                    statusFilter === status && styles.statusFilterButtonActive,
+                  ]}
+                  onPress={() =>
+                    setStatusFilter(statusFilter === status ? null : status)
+                  }
+                >
+                  <AssignmentStatusBadge status={status} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={TYPOGRAPHY.heading6}>Assigned Date</Text>
+            <TouchableOpacity
+              style={COMPONENTS.input}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text
+                style={[
+                  TYPOGRAPHY.body,
+                  { color: dateFilter ? COLORS.gray900 : COLORS.gray500 },
+                ]}
+              >
+                {dateFilter
+                  ? format(dateFilter, "MMM d, yyyy")
+                  : "Select a date"}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={dateFilter || new Date()}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setDateFilter(selectedDate);
+                  }
+                }}
+              />
+            )}
+          </View>
+
+          <View style={styles.filterButtons}>
+            <TouchableOpacity
+              style={[COMPONENTS.buttonSecondary, styles.filterButton]}
+              onPress={resetFilters}
+            >
+              <Text style={TYPOGRAPHY.buttonSecondary}>Reset</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[COMPONENTS.buttonPrimary, styles.filterButton]}
+              onPress={applyFilters}
+            >
+              <Text style={TYPOGRAPHY.buttonText}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const EmptyState = () => (
+  <View style={styles.emptyState}>
+    <Ionicons
+      name="document-text-outline"
+      size={ICON.xlarge}
+      color={COLORS.gray500}
+    />
+    <Text style={[TYPOGRAPHY.heading3, styles.emptyText]}>
+      No assignments assigned to you yet
+    </Text>
+    <Text style={[TYPOGRAPHY.body, styles.emptySubtext]}>
+      When you receive new assignments, they'll appear here
+    </Text>
+  </View>
+);
+
+// Main Screen Component
 export default function ClerkAssignmentsScreen() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<AssignmentStatus | null>(
+    null
+  );
+  const [dateFilter, setDateFilter] = useState<Date | null>(null);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     setRefreshing(true);
     setLoading(true);
 
@@ -74,7 +358,7 @@ export default function ClerkAssignmentsScreen() {
       }
 
       // Build a map of assignmentId -> visit status
-      const visitStatusMap: Record<string, string> = {};
+      const visitStatusMap: Record<string, AssignmentStatus> = {};
       visitData?.forEach((visit) => {
         if (!visit.assignmentId) return;
         if (visit.status === "completed") {
@@ -130,168 +414,72 @@ export default function ClerkAssignmentsScreen() {
       setRefreshing(false);
       setLoading(false);
     }
-  };
-
-  const updateStatus = async (id: string, newStatus: string) => {
-    setUpdatingId(id);
-
-    try {
-      const updateData: Partial<Assignment> = { status: newStatus };
-      if (newStatus === "completed") {
-        updateData.completion_date = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from("assignments")
-        .update(updateData)
-        .eq("id", id);
-
-      if (error) {
-        throw error;
-      }
-      await fetchAssignments();
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Failed to update status");
-    } finally {
-      setUpdatingId(null);
-    }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAssignments();
-  }, []);
+  }, [fetchAssignments]);
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case "pending":
-        return { color: COLORS.warning, icon: "time-outline" };
-      case "in_progress":
-        return { color: COLORS.info, icon: "construct-outline" };
-      case "completed":
-        return { color: COLORS.success, icon: "checkmark-done-outline" };
-      default:
-        return { color: COLORS.gray500, icon: "help-outline" };
+  const filteredAssignments = useMemo(() => {
+    let filtered = [...assignments];
+
+    if (statusFilter) {
+      filtered = filtered.filter((a) => a.status === statusFilter);
     }
+
+    if (dateFilter) {
+      filtered = filtered.filter((a) => {
+        const assignedDate = new Date(a.assigned_date);
+        return (
+          assignedDate.getDate() === dateFilter.getDate() &&
+          assignedDate.getMonth() === dateFilter.getMonth() &&
+          assignedDate.getFullYear() === dateFilter.getFullYear()
+        );
+      });
+    }
+
+    return filtered;
+  }, [assignments, statusFilter, dateFilter]);
+
+  const applyFilters = () => {
+    setShowFilters(false);
   };
 
-  const renderItem = ({ item }: { item: Assignment }) => {
-    const statusConfig = getStatusConfig(item.status);
+  const resetFilters = () => {
+    setStatusFilter(null);
+    setDateFilter(null);
+    setShowFilters(false);
+  };
 
-    return (
-      <View style={COMPONENTS.card}>
-        <View style={styles.cardHeader}>
-          <Text style={TYPOGRAPHY.heading3}>{item.task}</Text>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: statusConfig.color },
-            ]}
-          >
-            <Ionicons
-              name={statusConfig.icon as any}
-              size={ICON.small}
-              color={COLORS.white}
-              style={styles.statusIcon}
-            />
-            <Text style={styles.statusText}>
-              {item.status.replace("_", " ")}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Ionicons
-            name="location-outline"
-            size={ICON.small}
-            color={COLORS.gray500}
-          />
-          <Text style={[TYPOGRAPHY.body, styles.detailText]}>
-            {item.address}
-          </Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Ionicons
-            name="calendar-outline"
-            size={ICON.small}
-            color={COLORS.gray500}
-          />
-          <Text style={[TYPOGRAPHY.body, styles.detailText]}>
-            Assigned: {new Date(item.assigned_date).toLocaleDateString()}
-          </Text>
-        </View>
-
-        {item.status === "pending" ? (
-          <TouchableOpacity
-            style={COMPONENTS.buttonPrimary}
-            onPress={() =>
-              router.push({
-                pathname: "/clerk/list/VisitAssignment",
-                params: {
-                  id: item.id,
-                  task: item.task,
-                  address: item.address,
-                  assigned_date: item.assigned_date,
-                },
-              })
-            }
-            disabled={updatingId === item.id}
-          >
-            {updatingId === item.id ? (
-              <ActivityIndicator color={COLORS.white} />
-            ) : (
-              <Text style={TYPOGRAPHY.buttonText}>Start Assignment</Text>
-            )}
-          </TouchableOpacity>
-        ) : item.status === "in_progress" ? (
-          <TouchableOpacity
-            style={[
-              COMPONENTS.buttonPrimary,
-              { backgroundColor: COLORS.success },
-            ]}
-            onPress={() =>
-              router.push({
-                pathname: "/clerk/list/VisitAssignment",
-                params: {
-                  id: item.id,
-                  task: item.task,
-                  address: item.address,
-                  assigned_date: item.assigned_date,
-                },
-              })
-            }
-            disabled={updatingId === item.id}
-          >
-            {updatingId === item.id ? (
-              <ActivityIndicator color={COLORS.white} />
-            ) : (
-              <Text style={TYPOGRAPHY.buttonText}>View Status</Text>
-            )}
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.completedRow}>
-            <Ionicons
-              name="checkmark-done"
-              size={ICON.medium}
-              color={COLORS.success}
-            />
-            <Text style={[TYPOGRAPHY.body, styles.completedText]}>
-              Completed on{" "}
-              {item.completion_date
-                ? new Date(item.completion_date).toLocaleDateString()
-                : "N/A"}
-            </Text>
-          </View>
-        )}
-      </View>
-    );
+  const handleAssignmentPress = (item: Assignment) => {
+    router.push({
+      pathname: "/clerk/list/VisitAssignment",
+      params: {
+        id: item.id,
+        task: item.task,
+        address: item.address,
+        assigned_date: item.assigned_date,
+      },
+    });
   };
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        {
+          paddingBottom:
+            insets.top + SPACING.xlarge + SPACING.xlarge + SPACING.xlarge,
+        },
+      ]}
+    >
       <View style={styles.header}>
-        <Text style={TYPOGRAPHY.heading1}>My Assignments</Text>
+        <TouchableOpacity
+          onPress={() => setShowFilters(true)}
+          style={styles.filterButtonIcon}
+        >
+          <Ionicons name="filter" size={ICON.medium} color={COLORS.primary} />
+        </TouchableOpacity>
       </View>
 
       {loading && !refreshing ? (
@@ -300,9 +488,15 @@ export default function ClerkAssignmentsScreen() {
         </View>
       ) : (
         <FlatList
-          data={assignments}
+          data={filteredAssignments}
           keyExtractor={(item) => item.id}
-          renderItem={renderItem}
+          renderItem={({ item }) => (
+            <AssignmentCard
+              item={item}
+              onPress={() => handleAssignmentPress(item)}
+              isUpdating={updatingId === item.id}
+            />
+          )}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -312,30 +506,72 @@ export default function ClerkAssignmentsScreen() {
               tintColor={COLORS.primary}
             />
           }
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Ionicons
-                name="document-text-outline"
-                size={ICON.xlarge}
-                color={COLORS.gray500}
-              />
-              <Text style={[TYPOGRAPHY.heading3, styles.emptyText]}>
-                No assignments assigned to you yet
-              </Text>
-              <Text style={[TYPOGRAPHY.body, styles.emptySubtext]}>
-                When you receive new assignments, they'll appear here
-              </Text>
-            </View>
-          }
+          ListEmptyComponent={<EmptyState />}
         />
       )}
+
+      <FilterModal
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        dateFilter={dateFilter}
+        setDateFilter={setDateFilter}
+        applyFilters={applyFilters}
+        resetFilters={resetFilters}
+      />
     </SafeAreaView>
   );
 }
+
+// Styles (same as before)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.backgroundLight,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  filterButtonIcon: {},
+  filterButtons: {
+    flexDirection: "row",
+    gap: SPACING.medium,
+    marginTop: SPACING.medium,
+  },
+  filterButton: {
+    flex: 1,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: BORDER_RADIUS.large,
+    borderTopRightRadius: BORDER_RADIUS.large,
+    padding: SPACING.large,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: SPACING.medium,
+  },
+  filterSection: {
+    marginBottom: SPACING.large,
+  },
+  statusFilterContainer: {
+    flexDirection: "row",
+    gap: SPACING.small,
+    marginTop: SPACING.small,
+  },
+  statusFilterButton: {
+    borderRadius: BORDER_RADIUS.medium,
+    padding: SPACING.small,
+    backgroundColor: COLORS.gray100,
+  },
+  statusFilterButtonActive: {
+    backgroundColor: COLORS.primaryLight,
   },
   header: {
     paddingHorizontal: SPACING.large,
@@ -348,7 +584,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: SPACING.large,
     paddingVertical: SPACING.medium,
-    gap: SPACING.medium, // Adds consistent spacing between cards
+    gap: SPACING.medium,
   },
   loadingContainer: {
     flex: 1,
@@ -359,9 +595,9 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start", // Changed to flex-start for better alignment
+    alignItems: "flex-start",
     marginBottom: SPACING.small,
-    gap: SPACING.small, // Added gap for better spacing
+    gap: SPACING.small,
   },
   statusBadge: {
     flexDirection: "row",
@@ -369,8 +605,8 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.small,
     paddingVertical: SPACING.tiny,
-    alignSelf: 'flex-start', // Ensures badge doesn't stretch
-    marginTop: 2, // Small visual adjustment
+    alignSelf: "flex-start",
+    marginTop: 2,
   },
   statusIcon: {
     marginRight: SPACING.tiny,
@@ -379,18 +615,18 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.heading6,
     color: COLORS.white,
     textTransform: "capitalize",
-    includeFontPadding: false, // Better text alignment
+    includeFontPadding: false,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: SPACING.small, // Smaller margin for tighter layout
-    gap: SPACING.small, // Added gap for better icon-text spacing
+    marginBottom: SPACING.small,
+    gap: SPACING.small,
   },
   detailText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.gray700, // Darker for better readability
-    flexShrink: 1, // Allows text to wrap if needed
+    color: COLORS.gray700,
+    flexShrink: 1,
   },
   completedRow: {
     flexDirection: "row",
@@ -404,7 +640,7 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body,
     color: COLORS.success,
     marginLeft: SPACING.small,
-    fontWeight: '500', // Slightly bolder for emphasis
+    fontWeight: "500",
   },
   emptyState: {
     flex: 1,
@@ -421,7 +657,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray700,
     textAlign: "center",
     marginTop: SPACING.medium,
-    lineHeight: TYPOGRAPHY.heading3.lineHeight, // Ensures consistent line height
+    lineHeight: TYPOGRAPHY.heading3.lineHeight,
   },
   emptySubtext: {
     ...TYPOGRAPHY.body,

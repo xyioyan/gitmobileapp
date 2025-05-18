@@ -80,6 +80,7 @@ export default function WriteDescription() {
           timestamp: timestamp as string,
           address: (address as string) ?? "Unknown",
           status: status as string,
+          assignmentId: ""
         });
         console.log(userId);
         router.replace("/clerk/CDashBoard" as never);

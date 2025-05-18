@@ -13,7 +13,7 @@ import { supabase } from "@/config/initSupabase";
 import { router, useRouter } from "expo-router";
 
 const Login = () => {
-  const [email, setEmail] = useState("21cs015@acetcbe.edu.in");
+  const [email, setEmail] = useState("21cs041@acetcbe.edu.in");
   const [password, setPassword] = useState("123456");
   const [loading, setLoading] = useState(false);
 

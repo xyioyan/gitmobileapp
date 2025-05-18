@@ -140,6 +140,7 @@ export default function VisitDetails() {
               </Text>
             </View>
           )}
+          {/* assignmentBadge */}
           {assignmentId && (
             <View style={styles.assignmentBadge}>
               <Ionicons

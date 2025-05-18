@@ -14,6 +14,7 @@ import {
   Pressable,
 } from "react-native";
 import { supabase } from "@/config/initSupabase";
+import { FAB } from "react-native-paper";
 import {
   COLORS,
   SHADOWS,
@@ -40,7 +41,7 @@ export type Assignment = {
 
 const AssignmentStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = getStatusConfig(status);
-  
+
   return (
     <View style={[styles.statusBadge, { backgroundColor: statusConfig.color }]}>
       <Ionicons
@@ -49,9 +50,7 @@ const AssignmentStatusBadge = ({ status }: { status: string }) => {
         color={COLORS.white}
         style={styles.statusIcon}
       />
-      <Text style={styles.statusText}>
-        {status.replace("_", " ")}
-      </Text>
+      <Text style={styles.statusText}>{status.replace("_", " ")}</Text>
     </View>
   );
 };
@@ -73,7 +72,9 @@ export default function OfficerAssignmentsScreen() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [filteredAssignments, setFilteredAssignments] = useState<Assignment[]>([]);
+  const [filteredAssignments, setFilteredAssignments] = useState<Assignment[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -98,17 +99,17 @@ export default function OfficerAssignmentsScreen() {
       }
 
       // Format data with clerk names
-      const formattedData = assignmentData.map(assignment => ({
+      const formattedData = assignmentData.map((assignment) => ({
         ...assignment,
-        clerk_name: assignment.clerk?.name || "Unknown Clerk"
+        clerk_name: assignment.clerk?.name || "Unknown Clerk",
       }));
 
       setAssignments(formattedData);
       setFilteredAssignments(formattedData);
-      
+
       // Extract unique clerk names for filter
       const uniqueClerks = Array.from(
-        new Set(formattedData.map(a => a.clerk_name))
+        new Set(formattedData.map((a) => a.clerk_name))
       ).sort() as string[];
       setClerks(uniqueClerks);
     } catch (error) {
@@ -125,19 +126,19 @@ export default function OfficerAssignmentsScreen() {
 
   const applyFilters = () => {
     let filtered = [...assignments];
-    
+
     if (clerkFilter) {
-      filtered = filtered.filter(a => 
+      filtered = filtered.filter((a) =>
         a.clerk_name.toLowerCase().includes(clerkFilter.toLowerCase())
       );
     }
-    
+
     if (statusFilter) {
-      filtered = filtered.filter(a => a.status === statusFilter);
+      filtered = filtered.filter((a) => a.status === statusFilter);
     }
-    
+
     if (dateFilter) {
-      filtered = filtered.filter(a => {
+      filtered = filtered.filter((a) => {
         const assignedDate = new Date(a.assigned_date);
         return (
           assignedDate.getDate() === dateFilter.getDate() &&
@@ -146,7 +147,7 @@ export default function OfficerAssignmentsScreen() {
         );
       });
     }
-    
+
     setFilteredAssignments(filtered);
     setShowFilters(false);
   };
@@ -165,69 +166,106 @@ export default function OfficerAssignmentsScreen() {
 
   const renderItem = ({ item }: { item: Assignment }) => {
     return (
-      <View style={COMPONENTS.card}>
-        <View style={styles.cardHeader}>
-          <Text style={TYPOGRAPHY.heading3}>{item.task}</Text>
-          <AssignmentStatusBadge status={item.status} />
-        </View>
+      <TouchableOpacity
+        onPress={() =>
+          router.push({
+            pathname: "/officer/list/VisitAssignment",
+            params: {
+              id: item.id,
+              task: item.task,
+              address: item.address,
+              assigned_date: item.assigned_date,
+            },
+          })
+        }
+      >
+        <View style={COMPONENTS.card}>
+          <View
+            style={[
+              styles.cardHeader,
+              {
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              },
+            ]}
+          >
+            <Text
+              style={[TYPOGRAPHY.heading3, { flex: 1 }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.task}
+            </Text>
+            <AssignmentStatusBadge status={item.status} />
+          </View>
 
-        <View style={styles.detailRow}>
-          <Ionicons
-            name="location-outline"
-            size={ICON.small}
-            color={COLORS.gray500}
-          />
-          <Text style={[TYPOGRAPHY.body, styles.detailText]}>
-            {item.address}
-          </Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Ionicons
-            name="person-outline"
-            size={ICON.small}
-            color={COLORS.gray500}
-          />
-          <Text style={[TYPOGRAPHY.body, styles.detailText]}>
-            Clerk: {item.clerk_name}
-          </Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Ionicons
-            name="calendar-outline"
-            size={ICON.small}
-            color={COLORS.gray500}
-          />
-          <Text style={[TYPOGRAPHY.body, styles.detailText]}>
-            Assigned: {new Date(item.assigned_date).toLocaleDateString()}
-          </Text>
-        </View>
-
-        {item.status === "completed" && (
-          <View style={styles.completedRow}>
+          <View style={styles.detailRow}>
             <Ionicons
-              name="checkmark-done"
-              size={ICON.medium}
-              color={COLORS.success}
+              name="location-outline"
+              size={ICON.small}
+              color={COLORS.gray500}
             />
-            <Text style={[TYPOGRAPHY.body, styles.completedText]}>
-              Completed on{" "}
-              {item.completion_date
-                ? new Date(item.completion_date).toLocaleDateString()
-                : "N/A"}
+            <Text style={[TYPOGRAPHY.body, styles.detailText]}>
+              {item.address}
             </Text>
           </View>
-        )}
-      </View>
+
+          <View style={styles.detailRow}>
+            <Ionicons
+              name="person-outline"
+              size={ICON.small}
+              color={COLORS.gray500}
+            />
+            <Text style={[TYPOGRAPHY.body, styles.detailText]}>
+              Clerk: {item.clerk_name}
+            </Text>
+          </View>
+
+          <View style={styles.detailRow}>
+            <Ionicons
+              name="calendar-outline"
+              size={ICON.small}
+              color={COLORS.gray500}
+            />
+            <Text style={[TYPOGRAPHY.body, styles.detailText]}>
+              Assigned: {new Date(item.assigned_date).toLocaleDateString()}
+            </Text>
+          </View>
+
+          {item.status === "completed" && (
+            <View style={styles.completedRow}>
+              <Ionicons
+                name="checkmark-done"
+                size={ICON.medium}
+                color={COLORS.success}
+              />
+              <Text style={[TYPOGRAPHY.body, styles.completedText]}>
+                Completed on{" "}
+                {item.completion_date
+                  ? new Date(item.completion_date).toLocaleDateString()
+                  : "N/A"}
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        {
+          paddingBottom:
+            insets.bottom + SPACING.xlarge + SPACING.xlarge + SPACING.medium,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Text style={TYPOGRAPHY.heading1}>Assignments Overview</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => setShowFilters(true)}
           style={styles.filterButtonIcon}
         >
@@ -264,8 +302,8 @@ export default function OfficerAssignmentsScreen() {
                 No assignments found
               </Text>
               <Text style={[TYPOGRAPHY.body, styles.emptySubtext]}>
-                {assignments.length === 0 
-                  ? "No assignments have been created yet" 
+                {assignments.length === 0
+                  ? "No assignments have been created yet"
                   : "No assignments match your filters"}
               </Text>
             </View>
@@ -273,7 +311,13 @@ export default function OfficerAssignmentsScreen() {
         />
       )}
 
-      {/* Filter Modal */}
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        color={COLORS.white}
+        onPress={() => router.push("/officer/list/WriteAssignment")}
+      />
+
       <Modal
         visible={showFilters}
         transparent={true}
@@ -285,7 +329,11 @@ export default function OfficerAssignmentsScreen() {
             <View style={styles.modalHeader}>
               <Text style={TYPOGRAPHY.heading2}>Filter Assignments</Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
-                <Ionicons name="close" size={ICON.medium} color={COLORS.gray500} />
+                <Ionicons
+                  name="close"
+                  size={ICON.medium}
+                  color={COLORS.gray500}
+                />
               </TouchableOpacity>
             </View>
 
@@ -307,9 +355,12 @@ export default function OfficerAssignmentsScreen() {
                     key={status}
                     style={[
                       styles.statusFilterButton,
-                      statusFilter === status && styles.statusFilterButtonActive
+                      statusFilter === status &&
+                        styles.statusFilterButtonActive,
                     ]}
-                    onPress={() => setStatusFilter(statusFilter === status ? null : status)}
+                    onPress={() =>
+                      setStatusFilter(statusFilter === status ? null : status)
+                    }
                   >
                     <AssignmentStatusBadge status={status} />
                   </Pressable>
@@ -323,8 +374,15 @@ export default function OfficerAssignmentsScreen() {
                 style={COMPONENTS.input}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text style={[TYPOGRAPHY.body, { color: dateFilter ? COLORS.gray900 : COLORS.gray500 }]}>
-                  {dateFilter ? dateFilter.toLocaleDateString() : "Select a date"}
+                <Text
+                  style={[
+                    TYPOGRAPHY.body,
+                    { color: dateFilter ? COLORS.gray900 : COLORS.gray500 },
+                  ]}
+                >
+                  {dateFilter
+                    ? dateFilter.toLocaleDateString()
+                    : "Select a date"}
                 </Text>
               </TouchableOpacity>
               {showDatePicker && (
@@ -347,7 +405,7 @@ export default function OfficerAssignmentsScreen() {
                 style={[COMPONENTS.buttonSecondary, styles.filterButton]}
                 onPress={resetFilters}
               >
-                <Text style={TYPOGRAPHY.buttonSecondary}>Reset</Text>
+                <Text style={TYPOGRAPHY.buttonPrimary}>Reset</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[COMPONENTS.buttonPrimary, styles.filterButton]}
@@ -369,9 +427,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundLight,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: SPACING.large,
     paddingVertical: SPACING.medium,
     borderBottomWidth: 1,
@@ -406,7 +464,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.small,
     paddingVertical: SPACING.tiny,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     marginTop: 2,
   },
   statusIcon: {
@@ -417,6 +475,35 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     textTransform: "capitalize",
     includeFontPadding: false,
+  },
+  assignmentBadge: {
+    position: "absolute",
+    top: -25,
+    right: SPACING.medium,
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: SPACING.small,
+    paddingVertical: SPACING.tiny,
+    borderRadius: BORDER_RADIUS.full,
+    ...SHADOWS.small,
+  },
+  fab: {
+    position: "absolute",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    right: SPACING.large,
+    bottom:
+      SPACING.small +
+      SPACING.xlarge +
+      SPACING.xlarge +
+      SPACING.xlarge +
+      SPACING.xlarge,
+    ...SHADOWS.medium,
   },
   detailRow: {
     flexDirection: "row",
@@ -441,7 +528,7 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body,
     color: COLORS.success,
     marginLeft: SPACING.small,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   emptyState: {
     flex: 1,
@@ -469,27 +556,27 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
     backgroundColor: COLORS.white,
     borderTopLeftRadius: BORDER_RADIUS.large,
     borderTopRightRadius: BORDER_RADIUS.large,
     padding: SPACING.large,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: SPACING.medium,
   },
   filterSection: {
     marginBottom: SPACING.large,
   },
   statusFilterContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: SPACING.small,
     marginTop: SPACING.small,
   },
@@ -502,7 +589,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryLight,
   },
   filterButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: SPACING.medium,
     marginTop: SPACING.medium,
   },

@@ -5,7 +5,7 @@ export const COLORS = {
   primary: '#4f46e5',       // Main brand color
   primaryDark: '#3b3698',   // Darker shade
   primaryLight: '#8b85f1',  // Lighter shade
-  
+
   // Status Colors
   success: '#10b981',
   warning: '#f59e0b',
@@ -95,10 +95,15 @@ heading6: {
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  buttonSecondary: {
+  buttonPrimary: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.primary,
+  },
+  buttonSecondary: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: "white",
   },
   buttonText: {
     fontSize: 14,

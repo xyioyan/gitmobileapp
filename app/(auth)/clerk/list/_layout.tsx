@@ -30,7 +30,7 @@ const StackLayout = () => {
         redirect={!session}
         options={{
           headerTitle: "Assignments",
-          headerShown: false,
+          headerShown: true,
           headerRight: () => (
             <TouchableOpacity 
               onPress={signOut}

@@ -18,10 +18,21 @@ import {
   TYPOGRAPHY,
   COMPONENTS,
   SHADOWS,
+  BORDER_RADIUS,
 } from "@/src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "@/config/initSupabase";
+import { useEffect, useState } from "react";
+
+export type Assignment = {
+  id: string;
+  task: string;
+  address: string;
+  assigned_date: string;
+  completion_date: string | null;
+  status: string;
+};
 
 export default function VisitDetails() {
   const insets = useSafeAreaInsets();
@@ -39,8 +50,10 @@ export default function VisitDetails() {
     completion_taken_at,
     completion_address,
     completion_description,
+    assignmentId,
   } = useLocalSearchParams();
-
+  const [loading, setLoading] = useState(false);
+  const [assignmentData, setAssignmentData] = useState<Assignment | null>(null);
   const imageUri =
     typeof photoUri === "string" ? decodeURIComponent(photoUri) : "";
   const formattedDate =
@@ -53,6 +66,27 @@ export default function VisitDetails() {
           minute: "2-digit",
         })
       : "Invalid date";
+  // Load assignment data if needed
+  useEffect(() => {
+    setLoading(true);
+    const fetchAssignment = async () => {
+      if (assignmentId && user_id) {
+        const { data, error } = await supabase
+          .from("assignments")
+          .select("*")
+          .eq("clerk_id", user_id)
+          .eq("id", assignmentId)
+          .single();
+
+        if (data) {
+          setAssignmentData(data);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchAssignment();
+  }, [assignmentId, user_id]);
 
   if (!photoUri) {
     return (
@@ -108,7 +142,17 @@ export default function VisitDetails() {
               </Text>
             </View>
           )}
-
+          {/* assignmentBadge */}
+          {assignmentId && (
+            <View style={styles.assignmentBadge}>
+              <Ionicons
+                name="briefcase-outline"
+                size={14}
+                color={COLORS.white}
+              />
+              <Text style={styles.assignmentBadgeText}>Assignment</Text>
+            </View>
+          )}
           {/* Description */}
           {description && (
             <View style={styles.detailItem}>
@@ -192,7 +236,7 @@ export default function VisitDetails() {
                       .from("visits")
                       .update({ status: "approved" })
                       .eq("id", id);
-                      console.log('while upload : ',error);
+                    console.log("while upload : ", error);
 
                     if (error) {
                       console.error("Approval failed:", error);
@@ -313,6 +357,98 @@ export default function VisitDetails() {
             </View>
           </>
         )}
+        {/* Assignment Detail Section */}
+        {assignmentId && (
+          <>
+            <Text
+              style={[
+                TYPOGRAPHY.heading3,
+                { marginTop: SPACING.large, marginBottom: SPACING.small },
+              ]}
+            >
+              Assignment Detatils
+            </Text>
+            <View style={styles.detailsContainer}>
+              {assignmentId && (
+                <View style={styles.assignmentBadge}>
+                  <Ionicons
+                    name="briefcase-outline"
+                    size={14}
+                    color={COLORS.white}
+                  />
+                  <Text style={styles.assignmentBadgeText}>Assignment</Text>
+                </View>
+              )}
+              {assignmentData?.task && (
+                <View style={styles.detailItem}>
+                  <Text style={[TYPOGRAPHY.heading4, styles.label]}>Task</Text>
+                  <Text style={[TYPOGRAPHY.body, styles.value]}>
+                    {assignmentData.task}
+                  </Text>
+                </View>
+              )}
+              {assignmentData?.assigned_date && (
+                <View style={styles.detailItem}>
+                  <Text style={[TYPOGRAPHY.heading4, styles.label]}>
+                    Assigned date
+                  </Text>
+                  <View style={styles.dateRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={COLORS.gray500}
+                    />
+                    <Text style={[TYPOGRAPHY.body, styles.value]}>
+                      {new Date(
+                        Array.isArray(assignmentData.assigned_date)
+                          ? assignmentData.assigned_date[0]
+                          : assignmentData.assigned_date
+                      ).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {assignmentData?.completion_date && (
+                <View style={styles.detailItem}>
+                  <Text style={[TYPOGRAPHY.heading4, styles.label]}>
+                    Completion Time
+                  </Text>
+                  <View style={styles.dateRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={COLORS.gray500}
+                    />
+                    <Text style={[TYPOGRAPHY.body, styles.value]}>
+                      {new Date(
+                        Array.isArray(assignmentData.completion_date)
+                          ? assignmentData.completion_date[0]
+                          : assignmentData.completion_date
+                      ).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {assignmentData?.address && (
+                <View style={styles.detailItem}>
+                  <Text style={[TYPOGRAPHY.heading4, styles.label]}>
+                    Location
+                  </Text>
+                  <View style={styles.locationRow}>
+                    <Ionicons
+                      name="location-outline"
+                      size={16}
+                      color={COLORS.primary}
+                    />
+                    <Text style={[TYPOGRAPHY.body, styles.value]}>
+                      {assignmentData.address}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -339,6 +475,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: SPACING.medium,
     backgroundColor: COLORS.gray100,
+  },
+  assignmentBadge: {
+    position: "absolute",
+    top: -8,
+    right: SPACING.medium,
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: SPACING.small,
+    paddingVertical: SPACING.tiny,
+    borderRadius: BORDER_RADIUS.full,
+    ...SHADOWS.small,
+  },
+  assignmentBadgeText: {
+    ...TYPOGRAPHY.heading6,
+    color: COLORS.white,
+    marginLeft: SPACING.tiny,
   },
   imagePlaceholder: {
     height: 200,

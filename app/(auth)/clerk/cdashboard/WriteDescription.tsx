@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
+import { SPACING } from "@/src/constants/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -91,7 +92,7 @@ export default function WriteDescription() {
 
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea,{ paddingBottom: insets.bottom + SPACING.xlarge + SPACING.large }]}>
       <StatusBar style='dark'/>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

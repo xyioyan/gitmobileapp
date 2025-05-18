@@ -44,12 +44,16 @@ type Visit = {
   assignmentId: string | null;
 };
 
+type FilterType = 'all' | 'approved' | 'pending' | 'completed';
+
 const VisitHistory = () => {
   const insets = useSafeAreaInsets();
   const { user, session } = useAuth();
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [filteredVisits, setFilteredVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -67,6 +71,10 @@ const VisitHistory = () => {
     loadData();
   }, [user]);
 
+  useEffect(() => {
+    filterVisits();
+  }, [visits, activeFilter]);
+
   const fetchVisits = async () => {
     const { data, error } = await supabase
       .from("visits")
@@ -76,6 +84,14 @@ const VisitHistory = () => {
 
     if (data) setVisits(data);
     if (error) console.error("Error fetching visits:", error);
+  };
+
+  const filterVisits = () => {
+    if (activeFilter === 'all') {
+      setFilteredVisits(visits);
+    } else {
+      setFilteredVisits(visits.filter(visit => visit.status === activeFilter));
+    }
   };
 
   const onRemoveImage = async (fileName: string) => {
@@ -142,6 +158,68 @@ const VisitHistory = () => {
       ]}
     >
       <StatusBar style="dark" />
+      <View style={styles.filterContainer}>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            activeFilter === 'all' && styles.activeFilter
+          ]}
+          onPress={() => setActiveFilter('all')}
+        >
+          <Text style={[
+            styles.filterText,
+            activeFilter === 'all' && styles.activeFilterText
+          ]}>
+            All
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            activeFilter === 'approved' && styles.activeFilter
+          ]}
+          onPress={() => setActiveFilter('approved')}
+        >
+          <Text style={[
+            styles.filterText,
+            activeFilter === 'approved' && styles.activeFilterText
+          ]}>
+            Approved
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            activeFilter === 'pending' && styles.activeFilter
+          ]}
+          onPress={() => setActiveFilter('pending')}
+        >
+          <Text style={[
+            styles.filterText,
+            activeFilter === 'pending' && styles.activeFilterText
+          ]}>
+            Pending
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            activeFilter === 'completed' && styles.activeFilter
+          ]}
+          onPress={() => setActiveFilter('completed')}
+        >
+          <Text style={[
+            styles.filterText,
+            activeFilter === 'completed' && styles.activeFilterText
+          ]}>
+            Completed
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
       <ScrollView
         contentContainerStyle={[
           styles.scrollContainer,
@@ -156,15 +234,15 @@ const VisitHistory = () => {
           />
         }
       >
-        {visits.length === 0 ? (
+        {filteredVisits.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="images-outline" size={48} color={COLORS.gray500} />
             <Text style={[TYPOGRAPHY.heading3, styles.emptyText]}>
-              No visits recorded yet
+              No {activeFilter === 'all' ? '' : activeFilter} visits recorded yet
             </Text>
           </View>
         ) : (
-          visits.map((visit) => (
+          filteredVisits.map((visit) => (
             <TouchableOpacity
               onLongPress={() => {
                 const imageUrl = visit.image_url;
@@ -293,6 +371,31 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: SPACING.medium,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.medium,
+    paddingTop: SPACING.small,
+    paddingBottom: SPACING.small,
+    backgroundColor: COLORS.backgroundLight,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray200,
+  },
+  filterButton: {
+    paddingHorizontal: SPACING.medium,
+    paddingVertical: SPACING.small,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  activeFilter: {
+    backgroundColor: COLORS.primary,
+  },
+  filterText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.gray600,
+  },
+  activeFilterText: {
+    color: COLORS.white,
   },
   emptyState: {
     flex: 1,
