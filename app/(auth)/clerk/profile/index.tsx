@@ -28,6 +28,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { decode } from "base64-arraybuffer"; // Make sure this package is installed
 import * as FileSystem from "expo-file-system";
+import ClerkTracker from "../cdashboard/ClerkTracker";
 
 const ProfileScreen: React.FC = () => {
   const router = useRouter();
@@ -290,7 +291,6 @@ const ProfileScreen: React.FC = () => {
     }
     setLoading(false);
   };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -378,6 +378,7 @@ const ProfileScreen: React.FC = () => {
           <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
+        <ClerkTracker />
       </ScrollView>
     </SafeAreaView>
   );

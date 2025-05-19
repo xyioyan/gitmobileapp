@@ -22,33 +22,23 @@ const StackLayout = () => {
         redirect = {!session} // Redirect to login if not authenticated
         options={{
           headerTitle: 'Officer Dashboard tracking',
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
-            </TouchableOpacity>
-          ),
+          headerShown:false,
         }}></Stack.Screen>
         <Stack.Screen
         name="MapView"
         redirect = {!session} // Redirect to login if not authenticated
         options={{
-          headerTitle: 'Officer Dashboard dummy',
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
-            </TouchableOpacity>
-          ),
+          headerTitle: 'Track Visits',
+          headerShown: false,
+          headerBackTitle: "Back"
+
         }}></Stack.Screen>
         <Stack.Screen
         name="OfficerRealtimeTrackingWeb"
         redirect = {!session} // Redirect to login if not authenticated
         options={{
           headerTitle: 'Officer Dashboard tracking',
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut}>
-              <Ionicons name="log-out-outline" size={30} color={'#fff'} />
-            </TouchableOpacity>
-          ),
+          headerShown:false,
         }}></Stack.Screen>
         
     </Stack>

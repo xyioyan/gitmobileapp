@@ -12,7 +12,7 @@ export const COLORS = {
   info: '#3178c6',
   error: '#ef4444',
   approved: '#3b82f6',
-  
+  accent:'#3B82F6',
   // Neutrals
   white: '#ffffff',
   black: '#000000',

@@ -48,12 +48,8 @@ const StackLayout = () => {
         name="maps"
         redirect={!session}
         options={{
-          headerTitle: "Pending Uploads",
-          headerRight: () => (
-            <TouchableOpacity onPress={signOut} style={{ marginRight: 16 }}>
-              <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
-            </TouchableOpacity>
-          ),
+          headerTitle: "Map",
+          headerBackTitle: "Back"
         }}
       />
       

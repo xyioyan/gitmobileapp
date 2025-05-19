@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   Modal,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { supabase } from "@/config/initSupabase";
 import {
@@ -29,7 +30,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
 
 // Types
-type AssignmentStatus = "pending" | "in_progress" | "completed";
+type AssignmentStatus = "pending" | "approval_pending" | "in_progress" | "completed";
 
 export type Assignment = {
   id: string;
@@ -53,6 +54,11 @@ const getStatusConfig = (status: AssignmentStatus): StatusConfig => {
       color: COLORS.warning,
       icon: "time-outline",
       label: "Pending",
+    },
+    approval_pending: {
+      color: COLORS.warning,
+      icon: "time-outline",
+      label: "Approval Pending",
     },
     in_progress: {
       color: COLORS.info,
@@ -154,22 +160,31 @@ const AssignmentCard = ({
         text={`Assigned: ${formatDate(item.assigned_date)}`}
       />
 
-      {item.status === "pending" || item.status === "in_progress" ? (
+      {item.status === "pending" ||
+      item.status === "approval_pending" ||
+      item.status === "in_progress" ? (
         <TouchableOpacity
           style={[
             COMPONENTS.buttonPrimary,
-            item.status === "in_progress" && {
-              backgroundColor: COLORS.success,
+            (item.status === "in_progress" ||
+              item.status === "approval_pending") && {
+              backgroundColor:
+                item.status === "approval_pending"
+                  ? COLORS.warning
+                  : COLORS.success,
             },
           ]}
           onPress={onPress}
-          disabled={isUpdating}
         >
           {isUpdating ? (
             <ActivityIndicator color={COLORS.white} />
           ) : (
             <Text style={TYPOGRAPHY.buttonText}>
-              {item.status === "pending" ? "Start Assignment" : "View Status"}
+              {item.status === "pending"
+                ? "Start Assignment"
+                : item.status === "approval_pending"
+                ? "Awaiting Approval"
+                : "View Status"}
             </Text>
           )}
         </TouchableOpacity>
@@ -179,7 +194,6 @@ const AssignmentCard = ({
     </View>
   );
 };
-
 const FilterModal = ({
   visible,
   onClose,
@@ -223,9 +237,18 @@ const FilterModal = ({
 
           <View style={styles.filterSection}>
             <Text style={TYPOGRAPHY.heading6}>Status</Text>
-            <View style={styles.statusFilterContainer}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.statusScrollContainer}
+            >
               {(
-                ["pending", "in_progress", "completed"] as AssignmentStatus[]
+                [
+                  "pending",
+                  "approval_pending",
+                  "in_progress",
+                  "completed",
+                ] as AssignmentStatus[]
               ).map((status) => (
                 <Pressable
                   key={status}
@@ -240,9 +263,10 @@ const FilterModal = ({
                   <AssignmentStatusBadge status={status} />
                 </Pressable>
               ))}
-            </View>
+            </ScrollView>
           </View>
 
+          {/* Rest of the modal content remains the same */}
           <View style={styles.filterSection}>
             <Text style={TYPOGRAPHY.heading6}>Assigned Date</Text>
             <TouchableOpacity
@@ -280,7 +304,7 @@ const FilterModal = ({
               style={[COMPONENTS.buttonSecondary, styles.filterButton]}
               onPress={resetFilters}
             >
-              <Text style={TYPOGRAPHY.buttonSecondary}>Reset</Text>
+              <Text style={TYPOGRAPHY.buttonPrimary}>Reset</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[COMPONENTS.buttonPrimary, styles.filterButton]}
@@ -363,9 +387,11 @@ export default function ClerkAssignmentsScreen() {
         if (!visit.assignmentId) return;
         if (visit.status === "completed") {
           visitStatusMap[visit.assignmentId] = "completed";
+        } else if (visit.status === "pending") {
+          visitStatusMap[visit.assignmentId] = "approval_pending";
         } else if (
           visitStatusMap[visit.assignmentId] !== "completed" &&
-          (visit.status === "pending" || visit.status === "approved")
+          visit.status === "approved"
         ) {
           visitStatusMap[visit.assignmentId] = "in_progress";
         }
@@ -565,13 +591,17 @@ const styles = StyleSheet.create({
     gap: SPACING.small,
     marginTop: SPACING.small,
   },
+  statusFilterButtonActive: {
+    backgroundColor: COLORS.primaryLight,
+  },
+  statusScrollContainer: {
+    paddingVertical: SPACING.small,
+  },
   statusFilterButton: {
     borderRadius: BORDER_RADIUS.medium,
     padding: SPACING.small,
     backgroundColor: COLORS.gray100,
-  },
-  statusFilterButtonActive: {
-    backgroundColor: COLORS.primaryLight,
+    marginRight: SPACING.small, // Add margin between buttons
   },
   header: {
     paddingHorizontal: SPACING.large,

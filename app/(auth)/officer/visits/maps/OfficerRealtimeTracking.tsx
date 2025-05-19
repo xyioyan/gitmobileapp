@@ -2,21 +2,36 @@ import React, { useEffect, useState } from "react";
 import { ref, onValue, off } from "firebase/database";
 import { db } from "@/config/firebaseConfig";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Button,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
 import WebView from "react-native-webview"; // Import WebView from react-native-webview
 import * as Location from "expo-location";
 import * as Linking from "expo-linking";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, SHADOWS, SPACING } from "@/src/constants/theme";
+import { router } from "expo-router";
 
 interface ClerkLocation {
   latitude: number;
   longitude: number;
   timestamp: string;
   name: string;
+  avatar: string;
 }
 
 const OfficerLocationTrackingWeb = () => {
-  const [selectedClerk, setSelectedClerk] = useState<ClerkLocation | null>(null);
-  const [clerkLocations, setClerkLocations] = useState<Record<string, ClerkLocation>>({});
+  const [selectedClerk, setSelectedClerk] = useState<ClerkLocation | null>(
+    null
+  );
+  const [clerkLocations, setClerkLocations] = useState<
+    Record<string, ClerkLocation>
+  >({});
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -42,13 +57,16 @@ const OfficerLocationTrackingWeb = () => {
   const centerOnUserLocation = async () => {
     console.log("Centering on user location...");
     try {
-      const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+      const { status, canAskAgain } =
+        await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
         if (canAskAgain) {
           alert("Permission to access location was denied.");
         } else {
-          alert("Location permission is permanently denied. Please enable it in settings.");
+          alert(
+            "Location permission is permanently denied. Please enable it in settings."
+          );
           await Linking.openSettings(); // Opens app settings for manual permission
         }
         return;
@@ -66,7 +84,8 @@ const OfficerLocationTrackingWeb = () => {
     }
   };
 
-
+  const defaultavatar =
+    "https://sm.ign.com/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.jpg";
 
   // Create map HTML content
   const generateMapHTML = () => {
@@ -76,7 +95,9 @@ const OfficerLocationTrackingWeb = () => {
           L.marker([${location.latitude}, ${location.longitude}]).addTo(map)
             .bindPopup(\`
             <div style="width: 200px; text-align: center;">
-              <img src="https://sm.ign.com/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.jpg" alt="Clerk Avatar" style="width: 100%; border-radius: 50%;" />
+              <img src="${
+                location.avatar ?? defaultavatar
+              }" alt="Clerk Avatar" style="width: 100%; border-radius: 50%;" />
             </div>
             <b>Clerk: ${location.name}</b>
             <br>Lat: ${location.latitude.toFixed(5)}<br>
@@ -103,7 +124,11 @@ const OfficerLocationTrackingWeb = () => {
           <div id="map"></div>
           <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
           <script>
-            var map = L.map('map').setView([${clerkLocations[Object.keys(clerkLocations)[0]]?.latitude || 51.505}, ${clerkLocations[Object.keys(clerkLocations)[0]]?.longitude || -0.09}], 13);
+            var map = L.map('map').setView([${
+              clerkLocations[Object.keys(clerkLocations)[0]]?.latitude || 51.505
+            }, ${
+      clerkLocations[Object.keys(clerkLocations)[0]]?.longitude || -0.09
+    }], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
@@ -117,12 +142,23 @@ const OfficerLocationTrackingWeb = () => {
   return (
     <View style={{ flex: 1 }}>
       <WebView
-        originWhitelist={['*']}
+        originWhitelist={["*"]}
         source={{ html: generateMapHTML() }} // Use the generated HTML for the WebView source
         style={{ flex: 1 }}
       />
 
-      <Text style={{ position: "absolute", top: insets.top + 10, left: 10, fontSize: 16, color: "#000", backgroundColor: "rgba(255,255,255,0.7)", padding: 6, borderRadius: 8 }}>
+      <Text
+        style={{
+          position: "absolute",
+          top: insets.top + 10,
+          left: 10,
+          fontSize: 16,
+          color: "#000",
+          backgroundColor: "rgba(255,255,255,0.7)",
+          padding: 6,
+          borderRadius: 8,
+        }}
+      >
         Tracking All Clerks
       </Text>
 
@@ -131,15 +167,60 @@ const OfficerLocationTrackingWeb = () => {
 
       {/* Floating info box */}
       {selectedClerk && (
-        <View style={{ position: "absolute", bottom: 20, left: 10, padding: 10, backgroundColor: "white", borderRadius: 8, borderWidth: 1, borderColor: "#ccc" }}>
-          <Text style={{ fontWeight: "bold" }}>Clerk: {selectedClerk.name}</Text>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 20,
+            left: 10,
+            padding: 10,
+            backgroundColor: "white",
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: "#ccc",
+          }}
+        >
+          <Text style={{ fontWeight: "bold" }}>
+            Clerk: {selectedClerk.name}
+          </Text>
           <Text>Lat: {selectedClerk.latitude.toFixed(5)}</Text>
           <Text>Lng: {selectedClerk.longitude.toFixed(5)}</Text>
-          <Text>Last updated: {new Date(selectedClerk.timestamp).toLocaleString()}</Text>
+          <Text>
+            Last updated: {new Date(selectedClerk.timestamp).toLocaleString()}
+          </Text>
         </View>
       )}
+      {/* Home button */}
+      <TouchableOpacity
+        style={styles.homeButton}
+        onPress={() => {
+          router.replace("/officer/visits");
+        }}
+        // disabled={refreshing}
+      >
+        <Ionicons name="home" size={20} color={COLORS.white} />
+      </TouchableOpacity>
     </View>
   );
 };
 
 export default OfficerLocationTrackingWeb;
+const styles = StyleSheet.create({
+  homeButton: {
+    position: "absolute",
+    bottom:
+      SPACING.xlarge +
+      SPACING.large +
+      SPACING.xlarge +
+      SPACING.large +
+      SPACING.large,
+    right: SPACING.medium,
+    backgroundColor: COLORS.primary,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    ...SHADOWS.medium,
+    zIndex: 10,
+  },
+});
